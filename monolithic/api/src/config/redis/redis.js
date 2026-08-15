@@ -4,7 +4,7 @@ import { envs } from '../../lib/env';
 let redis;
 
 
-const connectRedis = async () => {
+export const connectRedis = async () => {
     try {
         redis = new Redis(envs.REDIS_URI, {
             enableReadyCheck: true,
@@ -17,7 +17,7 @@ const connectRedis = async () => {
     }
 }
 
-const getRedisClient = () => {
+export const getRedisClient = () => {
     if (!redis) {
         throw new Error('Redis client is not initialized. Call connectRedis() first.');
     }
