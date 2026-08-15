@@ -19,7 +19,7 @@ const folderschema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-folderschema.index({ foldername: 1, userid: 1 }, { unique: true });
+folderschema.index({ foldername: 1 }, { unique: true });
 
 const Folder = mongoose.model('Folder', folderschema);
 

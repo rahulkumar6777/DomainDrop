@@ -127,4 +127,6 @@ const storageSchema = new mongoose.Schema(
   }
 );
 
+storageSchema.index({ "bucket.name": 1, userId: 1 }, { unique: true });
+
 export const Storage = mongoose.model("Storage", storageSchema);
