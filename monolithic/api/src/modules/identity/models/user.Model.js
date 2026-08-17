@@ -33,10 +33,6 @@ const userschema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  storageUsed: {
-    type: Number,
-    default: 0,
-  },
   status: {
     type: String,
     default: "active",
@@ -44,6 +40,9 @@ const userschema = new mongoose.Schema({
   },
   suspensionEnd: {
     type: Date,
+  },
+  registrationExpiresAt: {
+    type: Date
   }
 }, { timestamps: true });
 
@@ -61,6 +60,14 @@ userschema.methods.checkpassword = async function (oldpassword) {
   const result1 = await bcrypt.compare(oldpassword, this.password);
   return result1;
 };
+
+userschema.index(
+  { registrationExpiresAt: 1 },
+  {
+    expireAfterSeconds: 0,
+    partialFilterExpression: { status: 'pending' },
+  }
+);
 
 
 export const User = mongoose.model("User", userschema);
