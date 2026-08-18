@@ -104,6 +104,11 @@ const storageSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+
+      maxFileSize: {
+        type: Number,
+        default: 209715200,
+      },
     },
 
     status: {

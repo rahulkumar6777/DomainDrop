@@ -9,6 +9,8 @@ import { Storage } from '../../../models/storage.model.js';
 import { generateApiKey } from '../../../utils/generateApikey.js';
 import { buildBucketPolicy } from '../../../utils/minio/policy.js';
 import { createBucket } from '../../../utils/minio/createBucket.js';
+import { plans } from '../../../constant/plan.js';
+
 
 export const initRegisterService = async (req) => {
 
@@ -100,7 +102,7 @@ export const verifyRegisterService = async (req) => {
     const apiKey = generateApiKey();
     const bucketName = generateBucketName(userData._id);
     const policy = buildBucketPolicy(bucketName, 'private');
-
+    const plan = plans.free;
 
     // here i create the bucket and set the policy
     const bucketCreationresult = await createBucket(bucketName, 'private');
@@ -126,6 +128,15 @@ export const verifyRegisterService = async (req) => {
         policy: {
             type: 'private',
             rules: policy
+        },
+        quota: {
+            maxBytes: plan.maxStorage,
+            maxObjects: plan.maxFiles,
+            maxFileSize: plan.maxFileSize
+        },
+        usage: {
+            objects: 0,
+            bytes: 0
         },
         status: "active"
     });
