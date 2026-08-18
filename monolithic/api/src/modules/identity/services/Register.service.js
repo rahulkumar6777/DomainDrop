@@ -3,14 +3,8 @@ import { cacheKey } from '../../../utils/cache/cacheKey.js';
 import { AppError } from '../../../utils/errors/AppError.js';
 import { transporter } from '../../../utils/mail/transporter.js';
 import { User } from '../models/user.Model.js';
-import { ApiKey } from '../../../models/apikeys.model.js';
 import { Folder } from '../../../models/folder.model.js';
 import { Storage } from '../../../models/storage.model.js';
-import {
-    generateApiKey,
-    getApiKeyPrefix,
-    hashApiKey
-} from '../../../utils/generateApikey.js';
 import { createBucket } from '../../../utils/minio/createBucket.js';
 import { plans } from '../../../constant/plan.js';
 import { generateBucketName } from '../../../utils/storage/generateBucketName.js';
@@ -109,20 +103,11 @@ export const verifyRegisterService = async (req) => {
         { new: true }
     );
 
-    const apiKey = generateApiKey();
     const bucketName = generateBucketName(userData._id);
     const plan = plans.free;
 
     // here i create the bucket and set the policy
     await createBucket(bucketName, 'private');
-
-    await ApiKey.create({
-        userId: userData._id,
-        name: 'Default key',
-        keyPrefix: getApiKeyPrefix(apiKey),
-        keyHash: hashApiKey(apiKey),
-        status: 'active'
-    });
 
     await Folder.create({
         name: 'default',
@@ -157,6 +142,4 @@ export const verifyRegisterService = async (req) => {
     });
 
     await redis.del(redisKey);
-
-    return { apiKey };
 }

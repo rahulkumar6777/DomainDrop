@@ -34,19 +34,16 @@ export const verifyRegisterController = async (req, res) => {
             });
         }
 
-        const { apiKey } = await verifyRegisterService(req);
+        await verifyRegisterService(req);
 
         return res
-            .set('Cache-Control', 'no-store')
             .status(200)
             .json({
                 success: true,
-                message: "Registration Verified SuccessFully",
-                data: {
-                    apiKey,
-                },
+                message: "Registration Verified SuccessFully"
             });
     } catch (error) {
+        console.log(error)
         returnError(res, error);
     }
 };
