@@ -14,7 +14,7 @@ app.get('/health', (_req, res) => {
 })
 
 // routers
-import router from "./router/index.js";
+import router from "./routes/index.js";
 app.use('/api', router)
 
 

@@ -70,4 +70,4 @@ userschema.index(
 );
 
 
-export const User = mongoose.model("User", userschema);
+export const User = mongoose.models.User || mongoose.model("User", userschema);

@@ -1,4 +1,4 @@
-import { returnError } from "../../../utils/errors/errorHandler.js";
+import { returnError } from "../../../utils/errors/sendError.js";
 import { getAccessTokenOptions, getRefreshTokenOptions } from "../../../utils/security/cookieOption.js";
 import { refreshTokenService } from "../services/refreshToken.service.js";
 

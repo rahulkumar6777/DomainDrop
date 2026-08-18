@@ -4,8 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node ./src/index.js",
+    "dev": "nodemon ./src/index.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,7 @@
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",
+    "bcrypt": "^6.0.0",
     "bullmq": "^6.1.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",

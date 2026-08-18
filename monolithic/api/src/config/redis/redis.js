@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { envs } from '../../lib/env';
+import { envs } from '../../lib/env.js';
 
 let redis;
 

@@ -1,4 +1,4 @@
-import { client } from "./minio.js"
+import client from "./minio.js"
 import { buildBucketPolicy } from "./policy.js"
 
 export async function updateBucketPolicy(bucketName, policyType) {

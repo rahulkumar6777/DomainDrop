@@ -1,5 +1,5 @@
 import { validationResult } from "express-validator";
-import { sendError } from '../../../utils/errors/sendError.js'
+import { returnError } from '../../../utils/errors/sendError.js'
 import { initRegisterService, verifyRegisterService } from "../services/Register.service.js";
 import { envs } from "../../../lib/env.js";
 

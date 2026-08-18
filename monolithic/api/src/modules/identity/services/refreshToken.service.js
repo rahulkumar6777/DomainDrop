@@ -2,15 +2,15 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { SESSION_TTL_SECONDS, MAX_SESSIONS_PER_USER, createSessionKey, deleteAllSessions, enforceSessionLimit, generateAccessToken, generateRefreshToken, generateHashRefreshToken as hashRefreshToken, } from '../../../utils/security/generateToken.js';
 import { AppError } from '../../../utils/errors/AppError.js';
-import { getRedis } from '../../../config/redis/redis.js';
+import { getRedisClient } from '../../../config/redis/redis.js';
 import { envs } from '../../../lib/env.js';
-import { redisCachingKey } from '../../../utils/cache/rediskeys.js';
+import { cacheKey } from '../../../utils/cache/cacheKey.js';
 
 const REFRESH_ROTATION_GRACE_SECONDS = 10;
 const REFRESH_LOCK_SECONDS = 5;
 
 const readRotationResult = async ({ redis, userId, tokenId, incomingHash, userAgent }) => {
-    const rotationData = await redis.get(redisCachingKey.RefreshRotation(userId, tokenId));
+    const rotationData = await redis.get(cacheKey.RefreshRotation(userId, tokenId));
     if (!rotationData) {
         return null;
     }
@@ -47,7 +47,7 @@ const waitForRotationResult = async ({ redis, userId, tokenId, incomingHash, use
 
 export const refreshTokenService = async ({ refreshToken, ip, userAgent }) => {
 
-    const redis = getRedis();
+    const redis = getRedisClient();
 
     // here if refreshtoken not found
     if (!refreshToken) {
@@ -83,7 +83,7 @@ export const refreshTokenService = async ({ refreshToken, ip, userAgent }) => {
         throw new AppError('Invalid Sessions', 401);
     }
 
-    const lockKey = redisCachingKey.RefreshLock(userId, tokenId);
+    const lockKey = cacheKey.RefreshLock(userId, tokenId);
     const lockAcquired = await redis.set(lockKey, '1', 'EX', REFRESH_LOCK_SECONDS, 'NX');
     if (!lockAcquired) {
         const rotationResult = await waitForRotationResult({ redis, userId, tokenId, incomingHash: incommingHash, userAgent });
@@ -132,7 +132,7 @@ export const refreshTokenService = async ({ refreshToken, ip, userAgent }) => {
     await redis
         .multi()
         .set(newSessionKey, JSON.stringify(newSession), 'EX', SESSION_TTL_SECONDS)
-        .set(redisCachingKey.RefreshRotation(userId, tokenId), JSON.stringify(rotationResult), 'EX', REFRESH_ROTATION_GRACE_SECONDS)
+        .set(cacheKey.RefreshRotation(userId, tokenId), JSON.stringify(rotationResult), 'EX', REFRESH_ROTATION_GRACE_SECONDS)
         .del(sessionKey)
         .del(lockKey)
         .exec();
