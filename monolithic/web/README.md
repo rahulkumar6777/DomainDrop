@@ -1,18 +1,42 @@
-# React + Vite
+# DomainDrop Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React and Vite frontend for the DomainDrop marketing site and account
+authentication flow.
 
-Currently, two official plugins are available:
+## Routes
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `/` - product overview
+- `/pricing` - plans aligned with the API quota constants
+- `/developer` - REST and Node SDK design preview
+- `/about` - product story and principles
+- `/login` - login with rotating refresh-session support
+- `/signup` - registration and six-digit email verification
 
-## React Compiler
+## Local development
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Run the API on port `3000`:
 
-Note: This will impact Vite dev & build performances.
+```powershell
+cd monolithic/api
+npm.cmd run dev
+```
 
-## Expanding the ESLint configuration
+Run the web app:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```powershell
+cd monolithic/web
+npm.cmd run dev
+```
+
+Vite proxies `/api` to `http://localhost:3000`. For a deployed API, copy the
+shape of `.env.example` and set `VITE_API_URL` to the API's base URL.
+
+## Checks
+
+```powershell
+npm.cmd run lint
+npm.cmd run build
+```
+
+The access token lives in React memory. On reload, the app restores the session
+through the rotating HttpOnly refresh-token cookie.
