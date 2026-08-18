@@ -24,16 +24,6 @@ const storageSchema = new mongoose.Schema(
         enum: ["minio"],
         default: "minio",
       },
-
-      endpoint: {
-        type: String,
-        required: true,
-      },
-
-      region: {
-        type: String,
-        default: "us-east-1",
-      },
     },
 
     // Bucket access policy
@@ -52,43 +42,43 @@ const storageSchema = new mongoose.Schema(
     },
 
     // Custom domain configuration
-    customDomain: {
-      domain: {
-        type: String,
-        lowercase: true,
-        trim: true,
-        default: null,
-      },
+    // customDomain: {
+    //   domain: {
+    //     type: String,
+    //     lowercase: true,
+    //     trim: true,
+    //     default: null,
+    //   },
 
-      verified: {
-        type: Boolean,
-        default: false,
-      },
+    //   verified: {
+    //     type: Boolean,
+    //     default: false,
+    //   },
 
-      verificationToken: {
-        type: String,
-        default: null,
-      },
+    //   verificationToken: {
+    //     type: String,
+    //     default: null,
+    //   },
 
-      ssl: {
-        enabled: {
-          type: Boolean,
-          default: false,
-        },
+    //   ssl: {
+    //     enabled: {
+    //       type: Boolean,
+    //       default: false,
+    //     },
 
-        status: {
-          type: String,
-          enum: ["pending", "active", "failed"],
-          default: "pending",
-        },
-      },
+    //     status: {
+    //       type: String,
+    //       enum: ["pending", "active", "failed"],
+    //       default: "pending",
+    //     },
+    //   },
 
-      status: {
-        type: String,
-        enum: ["pending", "active", "disabled"],
-        default: "pending",
-      },
-    },
+    //   status: {
+    //     type: String,
+    //     enum: ["pending", "active", "disabled"],
+    //     default: "pending",
+    //   },
+    // },  // later we can add custom domain support if needed
 
     // Storage usage
     usage: {

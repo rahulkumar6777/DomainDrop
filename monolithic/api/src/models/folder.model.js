@@ -3,10 +3,8 @@ import mongoose from 'mongoose';
 const folderschema = new mongoose.Schema({
   foldername: {
     type: String,
-    unique: true,
     required: true,
-    trim: true,
-    index: true
+    trim: true
   },
   description: {
     type: String,
@@ -18,8 +16,6 @@ const folderschema = new mongoose.Schema({
     required: true
   }
 }, { timestamps: true });
-
-folderschema.index({ foldername: 1 }, { unique: true });
 
 const Folder = mongoose.model('Folder', folderschema);
 
