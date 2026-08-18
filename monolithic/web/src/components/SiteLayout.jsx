@@ -63,34 +63,42 @@ function SiteHeader() {
         </nav>
 
         <div className="header-actions">
-          {isReady && isAuthenticated ? (
-            <>
-              <span className="session-status">
-                <CheckCircle2 size={15} aria-hidden="true" />
-                Session active
-              </span>
-              <button
-                className="icon-button"
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                aria-label="Sign out"
-                title="Sign out"
-              >
-                <LogOut size={18} />
-              </button>
-            </>
-          ) : (
-            <>
-              <Link className="text-link header-login" to="/login">
-                Log in
-              </Link>
-              <Link className="button button-small button-dark" to="/signup">
-                Start free
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </Link>
-            </>
-          )}
+          <div className="auth-action-slot">
+            {!isReady ? (
+              <span
+                className="header-session-placeholder"
+                role="status"
+                aria-label="Checking session"
+              />
+            ) : isAuthenticated ? (
+              <>
+                <span className="session-status">
+                  <CheckCircle2 size={15} aria-hidden="true" />
+                  Session active
+                </span>
+                <button
+                  className="icon-button"
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  aria-label="Sign out"
+                  title="Sign out"
+                >
+                  <LogOut size={18} />
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className="text-link header-login" to="/login">
+                  Log in
+                </Link>
+                <Link className="button button-small button-dark" to="/signup">
+                  Start free
+                  <ArrowUpRight size={16} aria-hidden="true" />
+                </Link>
+              </>
+            )}
+          </div>
           <button
             className="icon-button menu-button"
             type="button"
@@ -120,7 +128,7 @@ function SiteHeader() {
                 {item.label}
               </NavLink>
             ))}
-            {!isAuthenticated && (
+            {isReady && !isAuthenticated && (
               <Link
                 className="mobile-nav-link"
                 to="/login"
