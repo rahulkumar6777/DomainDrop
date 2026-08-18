@@ -89,11 +89,10 @@ const enforceSessionLimit = async (redis, userId, maxSessions = MAX_SESSIONS_PER
     }
 };
 
-const generateRefreshToken = (userId, role, tokenId) => {
+const generateRefreshToken = (userId, tokenId) => {
     return jwt.sign(
         {
             _id: userId,
-            role
         }, envs.REFRESH_TOKEN_SECRET,
         {
             expiresIn: envs.REFRESH_TOKEN_EXPIRY,
@@ -101,11 +100,10 @@ const generateRefreshToken = (userId, role, tokenId) => {
         })
 };
 
-const generateAccessToken = (userId, role, tokenId) => {
+const generateAccessToken = (userId, tokenId) => {
     return jwt.sign(
         {
             _id: userId,
-            role
         }, envs.ACCESS_TOKEN_SECRET,
         {
             expiresIn: envs.ACCESS_TOKEN_EXPIRY,
@@ -113,17 +111,16 @@ const generateAccessToken = (userId, role, tokenId) => {
         })
 }
 
-const generateToken = async (userId, role, req) => {
+const generateToken = async (userId, req) => {
     const tokenId = crypto.randomUUID();
     const redis = getRedisClient();
 
-    const refreshToken = generateRefreshToken(userId, role, tokenId);
+    const refreshToken = generateRefreshToken(userId, tokenId);
 
     await redis.set(
         createSessionKey(userId, tokenId),
         JSON.stringify({
             hashedToken: generateHashRefreshToken(refreshToken),
-            role,
             ip: req?.ip || '',
             userAgent: req?.headers?.['user-agent'] || '',
             device: extractDevice(req?.headers?.['user-agent']),
@@ -137,7 +134,7 @@ const generateToken = async (userId, role, req) => {
 
     return {
         RefreshToken: refreshToken,
-        AccessToken: generateAccessToken(userId, role, tokenId),
+        AccessToken: generateAccessToken(userId, tokenId),
         tokenId
     };
 }
