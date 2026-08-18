@@ -1,5 +1,132 @@
 import mongoose from "mongoose";
 
+export const STORAGE_VISIBILITIES = Object.freeze(["private", "public-read"]);
+export const STORAGE_STATUSES = Object.freeze([
+  "provisioning",
+  "active",
+  "suspended",
+  "error",
+  "deleting",
+]);
+
+const nonNegativeInteger = {
+  validator: Number.isSafeInteger,
+  message: "Storage counters and limits must be safe integers",
+};
+
+const bucketSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      immutable: true,
+    },
+    provider: {
+      type: String,
+      enum: ["minio"],
+      default: "minio",
+      required: true,
+      immutable: true,
+    },
+  },
+  { _id: false },
+);
+
+const policySchema = new mongoose.Schema(
+  {
+    visibility: {
+      type: String,
+      enum: STORAGE_VISIBILITIES,
+      default: "private",
+      required: true,
+    },
+    appliedVisibility: {
+      type: String,
+      enum: STORAGE_VISIBILITIES,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "applied", "error"],
+      default: "pending",
+      required: true,
+    },
+    appliedAt: {
+      type: Date,
+      default: null,
+    },
+    lastError: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: null,
+      select: false,
+    },
+  },
+  { _id: false },
+);
+
+const usageSchema = new mongoose.Schema(
+  {
+    objects: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: nonNegativeInteger,
+    },
+    bytes: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: nonNegativeInteger,
+    },
+    reservedObjects: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: nonNegativeInteger,
+    },
+    reservedBytes: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: nonNegativeInteger,
+    },
+    lastReconciledAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false },
+);
+
+const quotaSchema = new mongoose.Schema(
+  {
+    maxBytes: {
+      type: Number,
+      required: true,
+      min: 0,
+      validate: nonNegativeInteger,
+    },
+    maxObjects: {
+      type: Number,
+      required: true,
+      min: 0,
+      validate: nonNegativeInteger,
+    },
+    maxFileSize: {
+      type: Number,
+      required: true,
+      min: 1,
+      validate: nonNegativeInteger,
+    },
+  },
+  { _id: false },
+);
+
 const storageSchema = new mongoose.Schema(
   {
     userId: {
@@ -7,121 +134,44 @@ const storageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       unique: true,
-      index: true,
+      immutable: true,
     },
-
-    // MinIO bucket
     bucket: {
-      name: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true,
-      },
-
-      provider: {
-        type: String,
-        enum: ["minio"],
-        default: "minio",
-      },
+      type: bucketSchema,
+      required: true,
     },
-
-    // Bucket access policy
     policy: {
-      type: {
-        type: String,
-        enum: ["private", "public-read", "public-read-write", "custom"],
-        default: "private",
-      },
-
-      // Custom MinIO policy JSON
-      rules: {
-        type: mongoose.Schema.Types.Mixed,
-        default: null,
-      },
+      type: policySchema,
+      default: () => ({}),
     },
-
-    // Custom domain configuration
-    // customDomain: {
-    //   domain: {
-    //     type: String,
-    //     lowercase: true,
-    //     trim: true,
-    //     default: null,
-    //   },
-
-    //   verified: {
-    //     type: Boolean,
-    //     default: false,
-    //   },
-
-    //   verificationToken: {
-    //     type: String,
-    //     default: null,
-    //   },
-
-    //   ssl: {
-    //     enabled: {
-    //       type: Boolean,
-    //       default: false,
-    //     },
-
-    //     status: {
-    //       type: String,
-    //       enum: ["pending", "active", "failed"],
-    //       default: "pending",
-    //     },
-    //   },
-
-    //   status: {
-    //     type: String,
-    //     enum: ["pending", "active", "disabled"],
-    //     default: "pending",
-    //   },
-    // },  // later we can add custom domain support if needed
-
-    // Storage usage
     usage: {
-      objects: {
-        type: Number,
-        default: 0,
-      },
-
-      bytes: {
-        type: Number,
-        default: 0,
-      },
+      type: usageSchema,
+      default: () => ({}),
     },
-
-    // Storage limits from user's plan
     quota: {
-      maxBytes: {
-        type: Number,
-        default: 0,
-      },
-
-      maxObjects: {
-        type: Number,
-        default: 0,
-      },
-
-      maxFileSize: {
-        type: Number,
-        default: 209715200,
-      },
+      type: quotaSchema,
+      required: true,
     },
-
     status: {
       type: String,
-      enum: ["provisioning", "active", "suspended", "error"],
+      enum: STORAGE_STATUSES,
       default: "provisioning",
+      required: true,
+    },
+    provisioningError: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: null,
+      select: false,
     },
   },
   {
     timestamps: true,
-  }
+    optimisticConcurrency: true,
+  },
 );
 
-storageSchema.index({ "bucket.name": 1, userId: 1 }, { unique: true });
+storageSchema.index({ status: 1, updatedAt: 1 });
 
-export const Storage = mongoose.model("Storage", storageSchema);
+export const Storage = mongoose.models.Storage || mongoose.model("Storage", storageSchema);

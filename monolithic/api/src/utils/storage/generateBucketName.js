@@ -1,3 +1,3 @@
-export const generateBucketName = (userid) => {
-    return `domaindrop-user-${userid}`;
+export const generateBucketName = (userId) => {
+    return `domaindrop-user-${userId}`;
 }

@@ -1,26 +1,46 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const domainSchema = new mongoose.Schema({
+const domainSchema = new mongoose.Schema(
+  {
     domain: {
-        type: String,
-        required: true,
-        unique: true
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 253,
     },
-    userid: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-        unique: true
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      immutable: true,
     },
     status: {
-        type: String,
-        default: "active",
-        enum: ['active', 'inactive', 'revoked']
-    }
-})
+      type: String,
+      enum: ["pending", "active", "inactive", "failed"],
+      default: "pending",
+      required: true,
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+    lastError: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: null,
+      select: false,
+    },
+  },
+  {
+    timestamps: true,
+    optimisticConcurrency: true,
+  },
+);
 
+domainSchema.index({ status: 1, updatedAt: 1 });
 
-domainSchema.index({ domain: 1, userid: 1 }, { unique: true });
-
-
-export const Domain = mongoose.model('Domain', domainSchema);
+export const Domain = mongoose.models.Domain || mongoose.model("Domain", domainSchema);

@@ -6,8 +6,11 @@ import { User } from '../models/user.Model.js';
 import { ApiKey } from '../../../models/apikeys.model.js';
 import { Folder } from '../../../models/folder.model.js';
 import { Storage } from '../../../models/storage.model.js';
-import { generateApiKey } from '../../../utils/generateApikey.js';
-import { buildBucketPolicy } from '../../../utils/minio/policy.js';
+import {
+    generateApiKey,
+    getApiKeyPrefix,
+    hashApiKey
+} from '../../../utils/generateApikey.js';
 import { createBucket } from '../../../utils/minio/createBucket.js';
 import { plans } from '../../../constant/plan.js';
 import { generateBucketName } from '../../../utils/storage/generateBucketName.js';
@@ -97,7 +100,10 @@ export const verifyRegisterService = async (req) => {
     const userData = await User.findOneAndUpdate(
         { _id: user._id, status: "pending" },
         {
-            $set: { status: "active" },
+            $set: {
+                status: "active",
+                emailVerifiedAt: new Date()
+            },
             $unset: { registrationExpiresAt: "" }
         },
         { new: true }
@@ -105,22 +111,25 @@ export const verifyRegisterService = async (req) => {
 
     const apiKey = generateApiKey();
     const bucketName = generateBucketName(userData._id);
-    const policy = buildBucketPolicy(bucketName, 'private');
     const plan = plans.free;
 
     // here i create the bucket and set the policy
     await createBucket(bucketName, 'private');
 
     await ApiKey.create({
-        userid: userData._id,
-        apikey: apiKey,
+        userId: userData._id,
+        name: 'Default key',
+        keyPrefix: getApiKeyPrefix(apiKey),
+        keyHash: hashApiKey(apiKey),
         status: 'active'
     });
 
     await Folder.create({
-        foldername: 'default',
+        name: 'default',
         description: 'default Folder',
-        userid: userData._id
+        userId: userData._id,
+        parentId: null,
+        isDefault: true
     });
 
     await Storage.create({
@@ -130,8 +139,10 @@ export const verifyRegisterService = async (req) => {
             provider: 'minio',
         },
         policy: {
-            type: 'private',
-            rules: policy
+            visibility: 'private',
+            appliedVisibility: 'private',
+            status: 'applied',
+            appliedAt: new Date()
         },
         quota: {
             maxBytes: plan.maxStorage,
@@ -146,4 +157,6 @@ export const verifyRegisterService = async (req) => {
     });
 
     await redis.del(redisKey);
+
+    return { apiKey };
 }
