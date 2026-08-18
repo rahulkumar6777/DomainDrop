@@ -30,7 +30,7 @@ const storageSchema = new mongoose.Schema(
     policy: {
       type: {
         type: String,
-        enum: ["private", "public-read", "custom"],
+        enum: ["private", "public-read", "public-read-write", "custom"],
         default: "private",
       },
 

@@ -12,9 +12,9 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // cors
-// import cors from 'cors';
-// import { corsOption } from "./utils/security/cors.js";
-// app.use(cors(corsOption));
+import cors from 'cors';
+import { corsOption } from "./utils/security/cors.js";
+app.use(cors(corsOption));
 
 
 // cookie-parser

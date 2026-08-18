@@ -22,7 +22,7 @@ export const initRegisterValidator = [
         .isString()
         .withMessage("password must be a String")
         .isLength({ min: 8, max: 30 })
-        .withMessage("password length between 6 to 30")
+        .withMessage("password length between 8 to 30")
         .matches(
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
         )
@@ -36,6 +36,8 @@ export const verifyRegisterValidator = [
         .trim()
         .notEmpty()
         .withMessage("otp is required")
+        .isNumeric()
+        .withMessage("otp must contain only digits")
         .isLength({ min: 6, max: 6 })
         .withMessage("otp must be six digit"),
     body('email')

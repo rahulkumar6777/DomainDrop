@@ -2,7 +2,7 @@ import { getRedisClient } from '../../../config/redis/redis.js';
 import { cacheKey } from '../../../utils/cache/cacheKey.js';
 import { AppError } from '../../../utils/errors/AppError.js';
 import { transporter } from '../../../utils/mail/transporter.js';
-import { User } from '../models/user.model.js';
+import { User } from '../models/user.Model.js';
 import { ApiKey } from '../../../models/apikeys.model.js';
 import { Folder } from '../../../models/folder.model.js';
 import { Storage } from '../../../models/storage.model.js';
@@ -10,13 +10,15 @@ import { generateApiKey } from '../../../utils/generateApikey.js';
 import { buildBucketPolicy } from '../../../utils/minio/policy.js';
 import { createBucket } from '../../../utils/minio/createBucket.js';
 import { plans } from '../../../constant/plan.js';
+import { generateBucketName } from '../../../utils/storage/generateBucketName.js';
+import { envs } from '../../../lib/env.js';
 
 
 export const initRegisterService = async (req) => {
 
-    const redis = getRedis();
+    const redis = getRedisClient();
 
-    const { fullName, email, phoneno, password, age } = req.body;
+    const { fullName, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -34,21 +36,24 @@ export const initRegisterService = async (req) => {
 
     const REGISTRATION_EXPIRY_MS = 10 * 60 * 1000;
     const getRegistrationExpiry = () => new Date(Date.now() + REGISTRATION_EXPIRY_MS);
-    const otp = Math.floor(1000 + Math.random() * 9000).toString()
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     const newUser = new User({
-        fullname: fullName,
-        email: email,
-        password: password,
-
+        fullName,
+        email,
+        password,
+        status: 'pending',
     });
 
     const redisKey = cacheKey.UserOtp(newUser.email);
-    redis.hset(redisKey, {
-        email: newUser.email,
-        otp: otp
-    });
-    redis.expire(redisKey, 600);
+    await redis
+        .multi()
+        .hset(redisKey, {
+            email: newUser.email,
+            otp
+        })
+        .expire(redisKey, 600)
+        .exec();
 
     await transporter.sendMail({
         from: `"DomainDrop" <${envs.EMAIL_USER}>`,
@@ -64,7 +69,7 @@ export const initRegisterService = async (req) => {
 }
 
 export const verifyRegisterService = async (req) => {
-    const redis = getRedis();
+    const redis = getRedisClient();
 
     const { otp, email } = req.body;
 
@@ -72,7 +77,6 @@ export const verifyRegisterService = async (req) => {
     const cachedOtp = await redis.hgetall(redisKey);
 
     const user = await User.findOne({ email });
-    console.log(user)
     if (!user) {
         throw new AppError('Registration expired or Registration not initiated. Please register again', 400);
     }
@@ -96,7 +100,7 @@ export const verifyRegisterService = async (req) => {
             $set: { status: "active" },
             $unset: { registrationExpiresAt: "" }
         },
-        { returnDocument: "after" }
+        { new: true }
     );
 
     const apiKey = generateApiKey();
@@ -105,7 +109,7 @@ export const verifyRegisterService = async (req) => {
     const plan = plans.free;
 
     // here i create the bucket and set the policy
-    const bucketCreationresult = await createBucket(bucketName, 'private');
+    await createBucket(bucketName, 'private');
 
     await ApiKey.create({
         userid: userData._id,

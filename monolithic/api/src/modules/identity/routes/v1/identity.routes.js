@@ -4,6 +4,7 @@ import { initRegisterController, verifyRegisterController } from '../../controll
 import { loginValidator } from '../../validators/login.validator.js';
 import { loginController } from '../../controllers/login.js';
 import { refreshTokenController } from '../../controllers/refreshToken.controller.js';
+import { logoutController } from '../../controllers/logout.controller.js';
 
 
 const router = express.Router();
@@ -20,6 +21,7 @@ router.post('/login', loginValidator, loginController);
 
 // refresh token
 router.get('/refresh-token', refreshTokenController);
+router.post('/logout', logoutController);
 
 
 export default router;

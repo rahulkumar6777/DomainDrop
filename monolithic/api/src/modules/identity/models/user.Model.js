@@ -35,7 +35,7 @@ const userschema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: "active",
+    default: "pending",
     enum: ['pending', 'active', "banned", "deleted"],
   },
   suspensionEnd: {
@@ -48,7 +48,7 @@ const userschema = new mongoose.Schema({
 
 
 // hash passwrd before save
-userschema.pre("save", async function (next) {
+userschema.pre("save", async function () {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }

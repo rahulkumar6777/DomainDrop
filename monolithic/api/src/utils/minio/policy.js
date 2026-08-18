@@ -1,4 +1,5 @@
 export function buildBucketPolicy(bucketName, type = 'private') {
+  const resource = `arn:aws:s3:::${bucketName}/*`;
 
   const policies = {
     private: {

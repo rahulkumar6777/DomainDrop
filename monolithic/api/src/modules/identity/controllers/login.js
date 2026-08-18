@@ -2,7 +2,7 @@ import { validationResult } from "express-validator";
 import { returnError } from "../../../utils/errors/sendError.js";
 import { loginService } from "../services/login.service.js";
 import { generateToken } from "../../../utils/security/generateToken.js";
-import { getAccessTokenOptions, getRefreshTokenOptions } from "../../../utils/security/cookieOption.js";
+import { getRefreshTokenOptions } from "../../../utils/security/cookieOption.js";
 
 
 export const loginController = async (req, res) => {

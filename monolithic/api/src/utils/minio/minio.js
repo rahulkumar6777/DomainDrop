@@ -7,12 +7,12 @@ const Minio = require('minio')
 
  
 const client = new Minio.Client({
-  endPoint: envs.NODE_ENV === "production" ? envs.MINIO_ENDPOINT : "localhost",
-  port: envs.NODE_ENV === "production" ? envs.MINIO_PORT : 9000,
+  endPoint: envs.MINIO_ENDPOINT,
+  port: Number(envs.MINIO_PORT),
   useSSL: envs.NODE_ENV === "production",
   region: "auto",
-  accessKey: envs.NODE_ENV === "production" ? envs.MINIO_ACCESS_KEY : "admin",
-  secretKey: envs.NODE_ENV === "production" ? envs.MINIO_SECRET_KEY : "rahul@dkfd48"
+  accessKey: envs.MINIO_ACCESS_KEY,
+  secretKey: envs.MINIO_SECRET_KEY
 });
 
 export default client

@@ -95,7 +95,7 @@ const generateRefreshToken = (userId, tokenId) => {
             _id: userId,
         }, envs.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: envs.REFRESH_TOKEN_EXPIRY,
+            expiresIn: envs.REFRESH_TOKEN_EXPIRATION,
             jwtid: tokenId
         })
 };
@@ -106,7 +106,7 @@ const generateAccessToken = (userId, tokenId) => {
             _id: userId,
         }, envs.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: envs.ACCESS_TOKEN_EXPIRY,
+            expiresIn: envs.ACCESS_TOKEN_EXPIRATION,
             jwtid: tokenId
         })
 }
