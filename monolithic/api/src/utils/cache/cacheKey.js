@@ -3,4 +3,5 @@ export const cacheKey = {
     SessionKey: (userId, tokenId) => `domaindrop:sessions:${userId}:${tokenId}`,
     RefreshLock: (userId, tokenId) => `domaindrop:refresh:lock:${userId}:${tokenId}`,
     RefreshRotation: (userId, tokenId) => `domaindrop:refresh:rotation:${userId}:${tokenId}`,
+    ApiKey: (apiKeyHash) => `domaindrop:apikeys:auth:${apiKeyHash}`,
 }
