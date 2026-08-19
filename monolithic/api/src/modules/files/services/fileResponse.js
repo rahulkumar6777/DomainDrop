@@ -1,0 +1,18 @@
+export const formatFile = (file) => ({
+    id: file._id,
+    spaceId: file.spaceId,
+    path: file.relativePath,
+    objectKey: file.objectKey,
+    originalName: file.originalName,
+    mimeType: file.mimeType,
+    size: file.size,
+    status: file.status,
+    uploadType: file.uploadType,
+    partSize: file.partSize,
+    partCount: file.partCount,
+    etag: file.etag,
+    uploadedAt: file.uploadedAt,
+    uploadExpiresAt: file.uploadExpiresAt,
+    createdAt: file.createdAt,
+    updatedAt: file.updatedAt,
+});
