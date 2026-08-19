@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const requiredEnvs = [
-    "NODE_ENV", "PORT",
+    "NODE_ENV", "PORT", "FRONTEND_URI" ,
     "ADMIN_EMAIL", "ADMIN_USERNAME", "ADMIN_PASSWORD",
     "MONGODB_URI", "REDIS_URI",
     "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASS",
@@ -19,6 +19,7 @@ for (const env of requiredEnvs) {
 export const envs = {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
+    FRONTEND_URI: process.env.FRONTEND_URI,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
     ADMIN_USERNAME: process.env.ADMIN_USERNAME,
