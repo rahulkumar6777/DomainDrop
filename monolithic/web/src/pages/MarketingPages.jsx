@@ -45,8 +45,8 @@ const codeSamples = {
     'console.log(file.url)',
   ].join('\n'),
   curl: [
-    'curl --request POST https://api.domaindrop.dev/v1/files',
-    "  --header 'Authorization: Bearer $DOMAIN_DROP_API_KEY'",
+    'curl --request POST https://api.domaindrop.dev/api/v1/files',
+    "  --header 'x-api-key: $DOMAIN_DROP_API_KEY'",
     "  --form 'spaceId=spc_default_01'",
     "  --form 'path=reports/august.pdf'",
     "  --form 'file=@./august.pdf'",
@@ -56,8 +56,8 @@ const codeSamples = {
     'import requests',
     '',
     "response = requests.post(",
-    "    'https://api.domaindrop.dev/v1/files',",
-    "    headers={'Authorization': f\"Bearer {os.environ['DOMAIN_DROP_API_KEY']}\"},",
+    "    'https://api.domaindrop.dev/api/v1/files',",
+    "    headers={'x-api-key': os.environ['DOMAIN_DROP_API_KEY']},",
     "    data={'spaceId': 'spc_default_01', 'path': 'reports/august.pdf'},",
     "    files={'file': open('./august.pdf', 'rb')},",
     ')',
@@ -222,7 +222,7 @@ function HomePage() {
             <p className="eyebrow">Storage infrastructure for builders</p>
             <h1>Object storage, minus the ops.</h1>
             <p className="hero-description">
-              Give every user a dedicated bucket, a ready-to-use default folder,
+              Give every user a dedicated bucket, a ready-to-use default space,
               and one clear access policy for everything inside.
             </p>
             <div className="hero-actions">
@@ -630,7 +630,7 @@ function DeveloperPage() {
             <p className="eyebrow">Developer platform</p>
             <h1>Storage APIs that stay out of your way.</h1>
             <p>
-              Upload with an API key and folder ID, inherit the bucket policy, and
+              Upload with an API key, space ID, and path, inherit the bucket policy, and
               receive the right delivery URL through one consistent interface.
             </p>
             <div className="api-preview-label">
@@ -658,7 +658,7 @@ function DeveloperPage() {
               <h2>One client. One upload call.</h2>
               <p>
                 Keep your API key on the server, select the default or a custom
-                folder, and send its ID with the file. Access comes from the bucket.
+                space, and send its ID plus a file path. Access comes from the bucket.
               </p>
               <div className="install-line">
                 <Terminal size={18} />
@@ -669,11 +669,10 @@ function DeveloperPage() {
             <section id="authentication" className="docs-block">
               <span className="docs-icon yellow"><KeyRound size={20} /></span>
               <p className="eyebrow">Authentication</p>
-              <h2>Bearer keys for server-to-server calls.</h2>
+              <h2>API keys for server-to-server calls.</h2>
               <p>
-                Send your key in the Authorization header. Browser account sessions
-                use a short-lived access token and a rotating HttpOnly refresh
-                cookie.
+                Send your key in the x-api-key header. Browser account sessions use
+                a Bearer access token and a rotating HttpOnly refresh cookie.
               </p>
               <div className="endpoint-list">
                 <div>
@@ -719,7 +718,7 @@ function DeveloperPage() {
               <p className="eyebrow">Responses</p>
               <h2>Predictable shapes and actionable errors.</h2>
               <p>
-                Successful calls return the folder ID, object key, content
+                Successful calls return the space ID, relative path, object key, content
                 metadata, and the delivery URL allowed by the current bucket
                 policy. Errors include a status and a human-readable message.
               </p>
