@@ -20,7 +20,7 @@ export const updateSpace = async (req) => {
         const space = await Space.findOneAndUpdate(
             { _id: req.params.spaceId, userId, isDefault: false },
             { $set: updates },
-            { new: true, runValidators: true },
+            { returnDocument: "after", runValidators: true },
         )
             .select("_id name description isDefault createdAt updatedAt")
             .lean();

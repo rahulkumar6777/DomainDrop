@@ -61,7 +61,7 @@ export const claimFileDeletion = async (userId, fileId, reason = "user") => {
                 ...availableLease(now),
             },
             { $set: lease },
-            { new: true },
+            { returnDocument: "after" },
         ).select("+deletionLeaseId +deletionLeaseUntil");
 
         if (!claimedFile) {
@@ -85,7 +85,7 @@ export const claimFileDeletion = async (userId, fileId, reason = "user") => {
                 ...lease,
             },
         },
-        { new: true },
+        { returnDocument: "after" },
     ).select("+deletionLeaseId +deletionLeaseUntil");
 
     if (!claimedFile) {
@@ -112,7 +112,7 @@ export const claimExpiredFileDeletion = async () => {
                 ...lease,
             },
         },
-        { new: true, sort: { uploadExpiresAt: 1 } },
+        { returnDocument: "after", sort: { uploadExpiresAt: 1 } },
     ).select("+deletionLeaseId +deletionLeaseUntil");
 
     if (expiredFile) {
@@ -125,7 +125,7 @@ export const claimExpiredFileDeletion = async () => {
             ...availableLease(now),
         },
         { $set: lease },
-        { new: true, sort: { updatedAt: 1 } },
+        { returnDocument: "after", sort: { updatedAt: 1 } },
     ).select("+deletionLeaseId +deletionLeaseUntil");
 };
 

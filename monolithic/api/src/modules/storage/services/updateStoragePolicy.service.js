@@ -22,7 +22,7 @@ export const updateStoragePolicy = async (req) => {
                 "policy.lastError": null,
             },
         },
-        { new: true, runValidators: true },
+        { returnDocument: "after", runValidators: true },
     ).select("bucket policy status");
 
     if (!storage) {
@@ -77,4 +77,3 @@ export const updateStoragePolicy = async (req) => {
         throw new AppError("Unable to update bucket policy", 502);
     }
 };
-

@@ -118,7 +118,7 @@ export const completeUpload = async (req) => {
                 multipartUploadId: null,
             },
         },
-        { new: true },
+        { returnDocument: "after" },
     );
 
     if (!completedFile) {

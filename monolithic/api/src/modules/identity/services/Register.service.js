@@ -169,7 +169,7 @@ export const verifyRegisterService = async (req) => {
             },
             $unset: { registrationExpiresAt: "" }
         },
-        { new: true }
+        { returnDocument: 'after' }
     );
 
     if (!userData) {

@@ -30,7 +30,7 @@ export const reserveFileQuota = async (userId, size) => {
                 "usage.reservedObjects": 1,
             },
         },
-        { new: true },
+        { returnDocument: "after" },
     )
         .select("bucket policy quota usage status")
         .lean();
