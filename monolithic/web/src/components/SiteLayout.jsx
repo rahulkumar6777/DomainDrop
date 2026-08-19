@@ -76,6 +76,9 @@ function SiteHeader() {
                   <CheckCircle2 size={15} aria-hidden="true" />
                   Session active
                 </span>
+                <Link className="button button-small button-dark" to="/app">
+                  Dashboard
+                </Link>
                 <button
                   className="icon-button"
                   type="button"
@@ -137,6 +140,11 @@ function SiteHeader() {
                 Log in
               </Link>
             )}
+            {isReady && isAuthenticated && (
+              <Link className="mobile-nav-link" to="/app" onClick={() => setIsMenuOpen(false)}>
+                Dashboard
+              </Link>
+            )}
           </div>
         </nav>
       )}
@@ -165,7 +173,7 @@ function SiteFooter() {
         </div>
       </div>
       <div className="shell footer-bottom">
-        <span>© {new Date().getFullYear()} DomainDrop</span>
+        <span>Â© {new Date().getFullYear()} DomainDrop</span>
         <span>Private by default.</span>
       </div>
     </footer>

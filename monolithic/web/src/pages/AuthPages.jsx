@@ -52,7 +52,7 @@ function AuthLayout({ eyebrow, title, copy, children }) {
       <div className="shell auth-layout">
         <div className="auth-aside">
           <p className="eyebrow">DomainDrop account</p>
-          <h1>One secure home for every user’s files.</h1>
+          <h1>One secure home for every userâ€™s files.</h1>
           <div className="auth-aside-points">
             <span><ShieldCheck size={18} /> Private by default</span>
             <span><KeyRound size={18} /> Rotating refresh sessions</span>
@@ -99,7 +99,7 @@ function LoginPage() {
 
     try {
       await login(form)
-      navigate(location.state?.from || '/developer', { replace: true })
+      navigate(location.state?.from || '/app', { replace: true })
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -330,7 +330,7 @@ function SignupPage() {
           autoComplete="new-password"
         />
         <p className="field-hint">
-          8–30 characters with uppercase, lowercase, number, and special character.
+          8â€“30 characters with uppercase, lowercase, number, and special character.
         </p>
 
         <button

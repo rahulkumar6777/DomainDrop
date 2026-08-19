@@ -2,12 +2,10 @@ import { useState } from 'react'
 import {
   ArrowRight,
   Boxes,
-  Braces,
   Check,
   CheckCircle2,
   ChevronRight,
   Code2,
-  Copy,
   FileCode2,
   FileImage,
   Gauge,
@@ -15,87 +13,13 @@ import {
   HardDrive,
   KeyRound,
   Lock,
-  Network,
-  PackageCheck,
   RefreshCw,
   ShieldCheck,
-  Terminal,
   Users,
   Zap,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import heroImage from '../assets/domaindrop-hero.jpg'
-
-const codeSamples = {
-  node: [
-    "import { readFile, stat } from 'node:fs/promises'",
-    '',
-    "const api = 'https://api.domaindrop.dev/api/v1'",
-    "const auth = { 'x-api-key': process.env.DOMAIN_DROP_API_KEY }",
-    "const localFile = './august.pdf'",
-    '',
-    "const ticket = await fetch(`${api}/files/upload-url`, {",
-    "  method: 'POST',",
-    "  headers: { ...auth, 'content-type': 'application/json' },",
-    "  body: JSON.stringify({",
-    '    spaceId: process.env.DOMAIN_DROP_SPACE_ID,',
-    "    path: 'reports/august.pdf',",
-    '    size: (await stat(localFile)).size,',
-    "    mimeType: 'application/pdf',",
-    '  }),',
-    '}).then((response) => response.json())',
-    '',
-    '// This small PDF gets one URL; large files return a multipart plan',
-    'const uploaded = await fetch(ticket.upload.url, {',
-    "  method: 'PUT',",
-    '  headers: ticket.upload.headers,',
-    '  body: await readFile(localFile),',
-    '})',
-    '',
-    "const result = await fetch(`${api}/files/${ticket.file.id}/complete`, {",
-    "  method: 'POST',",
-    "  headers: { ...auth, 'content-type': 'application/json' },",
-    "  body: JSON.stringify({ parts: [{ partNumber: 1, etag: uploaded.headers.get('etag') }] }),",
-    '}).then((response) => response.json())',
-    '',
-    'console.log(result.file)',
-  ].join('\n'),
-  curl: [
-    'curl --request POST https://api.domaindrop.dev/api/v1/files/upload-url',
-    "  --header 'x-api-key: $DOMAIN_DROP_API_KEY'",
-    "  --header 'content-type: application/json'",
-    "  --data '{",
-    '    "spaceId": "<SPACE_ID>",',
-    '    "path": "reports/august.pdf",',
-    '    "size": 24831,',
-    '    "mimeType": "application/pdf"',
-    "  }'",
-  ].join(' \\\n'),
-  python: [
-    'import os',
-    'import requests',
-    '',
-    "api = 'https://api.domaindrop.dev/api/v1'",
-    "auth = {'x-api-key': os.environ['DOMAIN_DROP_API_KEY']}",
-    "file_path = './august.pdf'",
-    '',
-    "ticket = requests.post(f'{api}/files/upload-url', headers=auth, json={",
-    "    'spaceId': os.environ['DOMAIN_DROP_SPACE_ID'],",
-    "    'path': 'reports/august.pdf',",
-    "    'size': os.path.getsize(file_path),",
-    "    'mimeType': 'application/pdf',",
-    '}).json()',
-    '',
-    "with open(file_path, 'rb') as file:",
-    "    uploaded = requests.put(ticket['upload']['url'], data=file, headers=ticket['upload']['headers'])",
-    "    uploaded.raise_for_status()",
-    '',
-    "result = requests.post(f\"{api}/files/{ticket['file']['id']}/complete\", headers=auth, json={",
-    "    'parts': [{'partNumber': 1, 'etag': uploaded.headers['ETag']}],",
-    '})',
-    "print(result.json()['file'])",
-  ].join('\n'),
-}
 
 const quickStartCode = [
   "import { DomainDrop } from '@domaindrop/node'",
@@ -112,7 +36,8 @@ const quickStartCode = [
   "  file: './launch.jpg',",
   '})',
   '',
-  'console.log(image.url)',
+  'const delivery = await drop.files.getUrl(image.id)',
+  'console.log(delivery.url)',
 ].join('\n')
 
 function SectionHeading({ eyebrow, title, copy, align = 'left' }) {
@@ -230,7 +155,7 @@ function PolicyDemo() {
       <div className="url-preview">
         <code>
           {isPrivate
-            ? 'cdn.domaindrop.dev/invoices/august.pdf?signature=••••&expires=900'
+            ? 'cdn.domaindrop.dev/invoices/august.pdf?signature=â€¢â€¢â€¢â€¢&expires=900'
             : 'cdn.domaindrop.dev/product-shots/launch.jpg'}
         </code>
         <span className={'url-state ' + (isPrivate ? 'private' : 'public')}>
@@ -505,7 +430,7 @@ function PricingPage() {
           <PlanCard
             name="Free"
             label="Available now"
-            price="₹0"
+            price="â‚¹0"
             description="For prototypes, portfolios, and small internal tools."
             features={planFeatures.free}
           />
@@ -604,181 +529,6 @@ function PricingPage() {
   )
 }
 
-function CodeWorkbench() {
-  const [language, setLanguage] = useState('node')
-  const [copied, setCopied] = useState(false)
-
-  const copyCode = async () => {
-    await navigator.clipboard.writeText(codeSamples[language])
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1600)
-  }
-
-  return (
-    <div className="code-workbench">
-      <div className="code-toolbar">
-        <div className="code-tabs" role="tablist" aria-label="Code language">
-          {[
-            ['node', 'Node.js'],
-            ['curl', 'cURL'],
-            ['python', 'Python'],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              className={language === value ? 'active' : ''}
-              type="button"
-              role="tab"
-              aria-selected={language === value}
-              onClick={() => setLanguage(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <button
-          className="code-copy"
-          type="button"
-          onClick={copyCode}
-          aria-label="Copy code"
-          title="Copy code"
-        >
-          {copied ? <Check size={17} /> : <Copy size={17} />}
-        </button>
-      </div>
-      <pre>
-        <code>{codeSamples[language]}</code>
-      </pre>
-    </div>
-  )
-}
-
-function DeveloperPage() {
-  return (
-    <>
-      <section className="page-intro developer-intro">
-        <div className="shell developer-intro-grid">
-          <div>
-            <p className="eyebrow">Developer platform</p>
-            <h1>Storage APIs that stay out of your way.</h1>
-            <p>
-              Request an upload URL with an API key, space ID, and path, upload directly,
-              then request the delivery URL allowed by the bucket policy.
-            </p>
-            <div className="api-preview-label">
-              <CheckCircle2 size={16} />
-              Presigned upload flow
-            </div>
-          </div>
-          <CodeWorkbench />
-        </div>
-      </section>
-
-      <section className="section docs-section">
-        <div className="shell docs-layout">
-          <aside className="docs-nav" aria-label="On this page">
-            <p>On this page</p>
-            <a href="#quickstart">Quickstart</a>
-            <a href="#authentication">Authentication</a>
-            <a href="#delivery">File delivery</a>
-            <a href="#responses">Responses</a>
-          </aside>
-          <div className="docs-content">
-            <section id="quickstart" className="docs-block">
-              <span className="docs-icon cyan"><PackageCheck size={20} /></span>
-              <p className="eyebrow">Quickstart</p>
-              <h2>One client. One upload call.</h2>
-              <p>
-                Keep your API key on the server, select the default or a custom
-                space, and send its ID plus a file path. Files over 64 MiB switch to
-                retryable 16 MiB multipart uploads. Access comes from the bucket.
-              </p>
-              <div className="install-line">
-                <Terminal size={18} />
-                <code>npm install @domaindrop/node</code>
-              </div>
-              <div className="endpoint-list">
-                <div>
-                  <span className="method post">POST</span>
-                  <code>/api/v1/files/upload-url</code>
-                  <span>Create single or multipart upload</span>
-                </div>
-                <div>
-                  <span className="method post">POST</span>
-                  <code>/api/v1/files/:fileId/parts</code>
-                  <span>Sign multipart chunks</span>
-                </div>
-                <div>
-                  <span className="method post">POST</span>
-                  <code>/api/v1/files/:fileId/complete</code>
-                  <span>Verify and finish upload</span>
-                </div>
-              </div>
-            </section>
-
-            <section id="authentication" className="docs-block">
-              <span className="docs-icon yellow"><KeyRound size={20} /></span>
-              <p className="eyebrow">Authentication</p>
-              <h2>API keys for server-to-server calls.</h2>
-              <p>
-                Send your key in the x-api-key header. Browser account sessions use
-                a Bearer access token and a rotating HttpOnly refresh cookie.
-              </p>
-              <div className="endpoint-list">
-                <div>
-                  <span className="method post">POST</span>
-                  <code>/api/v1/auth/login</code>
-                  <span>Start account session</span>
-                </div>
-                <div>
-                  <span className="method get">GET</span>
-                  <code>/api/v1/auth/refresh-token</code>
-                  <span>Rotate session token</span>
-                </div>
-                <div>
-                  <span className="method post">POST</span>
-                  <code>/api/v1/auth/logout</code>
-                  <span>Revoke current session</span>
-                </div>
-              </div>
-            </section>
-
-            <section id="delivery" className="docs-block">
-              <span className="docs-icon coral"><Network size={20} /></span>
-              <p className="eyebrow">File delivery</p>
-              <h2>Use the URL that matches the policy.</h2>
-              <div className="delivery-grid">
-                <article>
-                  <Lock size={21} />
-                  <h3>Private bucket</h3>
-                  <p>Every object is delivered through a time-limited signed URL.</p>
-                  <code>bucketPolicy: 'private'</code>
-                </article>
-                <article>
-                  <Globe2 size={21} />
-                  <h3>Public-read bucket</h3>
-                  <p>Every object is available from its stable direct URL.</p>
-                  <code>bucketPolicy: 'public-read'</code>
-                </article>
-              </div>
-            </section>
-
-            <section id="responses" className="docs-block">
-              <span className="docs-icon green"><Braces size={20} /></span>
-              <p className="eyebrow">Responses</p>
-              <h2>Predictable shapes and actionable errors.</h2>
-              <p>
-                File calls return the space ID, relative path, object key, status, and
-                content metadata. The signed URL endpoint returns either a temporary
-                private URL or the stable public URL. Errors include a human-readable message.
-              </p>
-            </section>
-          </div>
-        </div>
-      </section>
-    </>
-  )
-}
-
 const principles = [
   {
     icon: ShieldCheck,
@@ -814,7 +564,7 @@ function AboutPage() {
       <section className="section story-section">
         <div className="shell story-grid">
           <div className="story-statement">
-            <span className="large-quote">“</span>
+            <span className="large-quote">â€œ</span>
             <p>
               The best storage layer is the one your users understand and your
               developers barely have to think about.
@@ -887,4 +637,4 @@ function NotFoundPage() {
   )
 }
 
-export { AboutPage, DeveloperPage, HomePage, NotFoundPage, PricingPage }
+export { AboutPage, HomePage, NotFoundPage, PricingPage }

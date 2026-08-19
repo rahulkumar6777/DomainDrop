@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { authApi } from '../lib/api.js'
+import { ApiError, authApi, authorizedRequest } from '../lib/api.js'
 import { AuthContext } from './authContext.js'
 
 let pendingSessionRestore = null
@@ -56,6 +56,33 @@ function AuthProvider({ children }) {
     }
   }, [])
 
+  const apiRequest = useCallback(async (path, options = {}) => {
+    let token = accessToken
+
+    if (!token) {
+      try {
+        token = await refreshSession()
+      } catch {
+        setAccessToken(null)
+        throw new ApiError('Your session has expired. Please log in again.', 401)
+      }
+    }
+
+    try {
+      return await authorizedRequest(path, token, options)
+    } catch (error) {
+      if (error.status !== 401) throw error
+
+      try {
+        token = await refreshSession()
+        return await authorizedRequest(path, token, options)
+      } catch (refreshError) {
+        setAccessToken(null)
+        throw refreshError
+      }
+    }
+  }, [accessToken, refreshSession])
+
   const value = useMemo(
     () => ({
       accessToken,
@@ -64,8 +91,9 @@ function AuthProvider({ children }) {
       login,
       logout,
       refreshSession,
+      apiRequest,
     }),
-    [accessToken, isReady, login, logout, refreshSession],
+    [accessToken, apiRequest, isReady, login, logout, refreshSession],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
