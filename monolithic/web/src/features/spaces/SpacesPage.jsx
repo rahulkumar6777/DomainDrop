@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FolderKanban, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, Copy, FolderKanban, Pencil, Plus, Trash2 } from 'lucide-react'
 import AppPageHeader from '../../components/app/AppPageHeader.jsx'
 import { ConfirmDialog } from '../../components/app/AppModal.jsx'
 import { ErrorState, LoadingState } from '../../components/app/AppStates.jsx'
@@ -19,6 +19,7 @@ function SpacesPage() {
   const [pendingDelete, setPendingDelete] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [copiedId, setCopiedId] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -79,12 +80,20 @@ function SpacesPage() {
     }
   }
 
+  const copySpaceId = async (spaceId) => {
+    await navigator.clipboard.writeText(spaceId)
+    setCopiedId(spaceId)
+    window.setTimeout(() => {
+      setCopiedId((current) => current === spaceId ? '' : current)
+    }, 1500)
+  }
+
   return (
     <div className="app-page">
       <AppPageHeader
         eyebrow="Organization"
         title="Spaces"
-        copy="Logical separators inside your one user bucket."
+        copy="Logical separators inside your bucket. Copy a Space ID for REST API or SDK uploads."
         action={<button className="button button-small button-dark" type="button" onClick={openCreate}><Plus size={16} /> New space</button>}
       />
       {error && !editing && <ErrorState message={error} onRetry={load} />}
@@ -94,9 +103,23 @@ function SpacesPage() {
             <article key={space.id}>
               <span className="space-icon"><FolderKanban size={19} /></span>
               <div>
-                <div><h2>{space.name}</h2>{space.isDefault && <span className="default-badge">Default</span>}</div>
+                <div className="space-title-row"><h2>{space.name}</h2>{space.isDefault && <span className="default-badge">Default</span>}</div>
                 <p>{space.description || 'No description'}</p>
-                <small>Created {formatDate(space.createdAt)}</small>
+                <div className="space-meta">
+                  <span className="space-id">
+                    <span>Space ID</span>
+                    <code>{space.id}</code>
+                    <button
+                      type="button"
+                      onClick={() => copySpaceId(space.id)}
+                      aria-label={copiedId === space.id ? `Space ID copied for ${space.name}` : `Copy Space ID for ${space.name}`}
+                      title={copiedId === space.id ? 'Copied' : 'Copy Space ID'}
+                    >
+                      {copiedId === space.id ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
+                  </span>
+                  <small>Created {formatDate(space.createdAt)}</small>
+                </div>
               </div>
               {!space.isDefault && (
                 <div className="row-actions">
