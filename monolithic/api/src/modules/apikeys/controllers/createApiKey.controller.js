@@ -1,5 +1,5 @@
 import { validationResult } from "express-validator";
-import { returnError } from "../../../utils/errors/sendError";
+import { returnError } from "../../../utils/errors/sendError.js";
 import { createApiKey } from "../services/createApiKey.service.js";
 
 export const createApiKeyController = async (req, res) => {
@@ -14,7 +14,8 @@ export const createApiKeyController = async (req, res) => {
 
         const { apiKey, key } = await createApiKey(req);
 
-        return res.status(200).json({
+        return res.status(201).json({
+            success: true,
             apiKey,
             key
         })
