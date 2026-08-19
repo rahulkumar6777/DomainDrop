@@ -11,6 +11,7 @@ export const connectRedis = async () => {
             lazyConnect: true
         });
         await redis.set('foo', 'bar');
+        console.log("Redis Connected")
     } catch (error) {
         console.error('Error connecting to Redis:', error);
         process.exit(1);
