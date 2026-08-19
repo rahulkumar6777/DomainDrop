@@ -6,7 +6,6 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   Code2,
   Copy,
   FileCode2,
@@ -29,40 +28,67 @@ import heroImage from '../assets/domaindrop-hero.jpg'
 
 const codeSamples = {
   node: [
-    "import { DomainDrop } from '@domaindrop/node'",
+    "import { readFile, stat } from 'node:fs/promises'",
     '',
-    'const storage = new DomainDrop({',
-    '  apiKey: process.env.DOMAIN_DROP_API_KEY,',
+    "const api = 'https://api.domaindrop.dev/api/v1'",
+    "const auth = { 'x-api-key': process.env.DOMAIN_DROP_API_KEY }",
+    "const localFile = './august.pdf'",
+    '',
+    "const ticket = await fetch(`${api}/files/upload-url`, {",
+    "  method: 'POST',",
+    "  headers: { ...auth, 'content-type': 'application/json' },",
+    "  body: JSON.stringify({",
+    '    spaceId: process.env.DOMAIN_DROP_SPACE_ID,',
+    "    path: 'reports/august.pdf',",
+    '    size: (await stat(localFile)).size,',
+    "    mimeType: 'application/pdf',",
+    '  }),',
+    '}).then((response) => response.json())',
+    '',
+    '// This small PDF gets one URL; large files return a multipart plan',
+    'await fetch(ticket.upload.url, {',
+    "  method: 'PUT',",
+    '  headers: ticket.upload.headers,',
+    '  body: await readFile(localFile),',
     '})',
     '',
-    'const file = await storage.files.upload({',
-    "  spaceId: 'spc_default_01',",
-    "  path: 'reports/august.pdf',",
-    "  file: './august.pdf',",
-    '})',
+    "const result = await fetch(`${api}/files/${ticket.file.id}/complete`, {",
+    "  method: 'POST', headers: auth,",
+    '}).then((response) => response.json())',
     '',
-    '// Signed for private buckets, direct for public-read buckets',
-    'console.log(file.url)',
+    'console.log(result.file)',
   ].join('\n'),
   curl: [
-    'curl --request POST https://api.domaindrop.dev/api/v1/files',
+    'curl --request POST https://api.domaindrop.dev/api/v1/files/upload-url',
     "  --header 'x-api-key: $DOMAIN_DROP_API_KEY'",
-    "  --form 'spaceId=spc_default_01'",
-    "  --form 'path=reports/august.pdf'",
-    "  --form 'file=@./august.pdf'",
+    "  --header 'content-type: application/json'",
+    "  --data '{",
+    '    "spaceId": "<SPACE_ID>",',
+    '    "path": "reports/august.pdf",',
+    '    "size": 24831,',
+    '    "mimeType": "application/pdf"',
+    "  }'",
   ].join(' \\\n'),
   python: [
     'import os',
     'import requests',
     '',
-    "response = requests.post(",
-    "    'https://api.domaindrop.dev/api/v1/files',",
-    "    headers={'x-api-key': os.environ['DOMAIN_DROP_API_KEY']},",
-    "    data={'spaceId': 'spc_default_01', 'path': 'reports/august.pdf'},",
-    "    files={'file': open('./august.pdf', 'rb')},",
-    ')',
+    "api = 'https://api.domaindrop.dev/api/v1'",
+    "auth = {'x-api-key': os.environ['DOMAIN_DROP_API_KEY']}",
+    "file_path = './august.pdf'",
     '',
-    "print(response.json()['url'])",
+    "ticket = requests.post(f'{api}/files/upload-url', headers=auth, json={",
+    "    'spaceId': os.environ['DOMAIN_DROP_SPACE_ID'],",
+    "    'path': 'reports/august.pdf',",
+    "    'size': os.path.getsize(file_path),",
+    "    'mimeType': 'application/pdf',",
+    '}).json()',
+    '',
+    "with open(file_path, 'rb') as file:",
+    "    requests.put(ticket['upload']['url'], data=file, headers=ticket['upload']['headers']).raise_for_status()",
+    '',
+    "result = requests.post(f\"{api}/files/{ticket['file']['id']}/complete\", headers=auth)",
+    "print(result.json()['file'])",
   ].join('\n'),
 }
 
@@ -630,12 +656,12 @@ function DeveloperPage() {
             <p className="eyebrow">Developer platform</p>
             <h1>Storage APIs that stay out of your way.</h1>
             <p>
-              Upload with an API key, space ID, and path, inherit the bucket policy, and
-              receive the right delivery URL through one consistent interface.
+              Request an upload URL with an API key, space ID, and path, upload directly,
+              then request the delivery URL allowed by the bucket policy.
             </p>
             <div className="api-preview-label">
-              <Clock3 size={16} />
-              Storage API design preview
+              <CheckCircle2 size={16} />
+              Presigned upload flow
             </div>
           </div>
           <CodeWorkbench />
@@ -658,11 +684,29 @@ function DeveloperPage() {
               <h2>One client. One upload call.</h2>
               <p>
                 Keep your API key on the server, select the default or a custom
-                space, and send its ID plus a file path. Access comes from the bucket.
+                space, and send its ID plus a file path. Files over 64 MiB switch to
+                retryable 16 MiB multipart uploads. Access comes from the bucket.
               </p>
               <div className="install-line">
                 <Terminal size={18} />
                 <code>npm install @domaindrop/node</code>
+              </div>
+              <div className="endpoint-list">
+                <div>
+                  <span className="method post">POST</span>
+                  <code>/api/v1/files/upload-url</code>
+                  <span>Create single or multipart upload</span>
+                </div>
+                <div>
+                  <span className="method post">POST</span>
+                  <code>/api/v1/files/:fileId/parts</code>
+                  <span>Sign multipart chunks</span>
+                </div>
+                <div>
+                  <span className="method post">POST</span>
+                  <code>/api/v1/files/:fileId/complete</code>
+                  <span>Verify and finish upload</span>
+                </div>
               </div>
             </section>
 
@@ -718,9 +762,9 @@ function DeveloperPage() {
               <p className="eyebrow">Responses</p>
               <h2>Predictable shapes and actionable errors.</h2>
               <p>
-                Successful calls return the space ID, relative path, object key, content
-                metadata, and the delivery URL allowed by the current bucket
-                policy. Errors include a status and a human-readable message.
+                File calls return the space ID, relative path, object key, status, and
+                content metadata. The signed URL endpoint returns either a temporary
+                private URL or the stable public URL. Errors include a human-readable message.
               </p>
             </section>
           </div>
