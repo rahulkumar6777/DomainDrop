@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidRelativePath } from "../utils/storage/filePath.js";
 
 export const FILE_STATUSES = Object.freeze([
     "pending",
@@ -6,6 +7,11 @@ export const FILE_STATUSES = Object.freeze([
     "deleting",
     "failed",
 ]);
+
+const safeInteger = {
+    validator: Number.isSafeInteger,
+    message: "Upload part values must be safe integers",
+};
 
 const fileSchema = new mongoose.Schema(
     {
@@ -62,14 +68,7 @@ const fileSchema = new mongoose.Schema(
             maxlength: 1024,
             immutable: true,
             validate: {
-                validator: (path) => {
-                    if (typeof path !== "string" || path.startsWith("/") || path.endsWith("/")) {
-                        return false;
-                    }
-
-                    const parts = path.split("/");
-                    return !path.includes("\\") && parts.every((part) => part && part !== "." && part !== "..");
-                },
+                validator: isValidRelativePath,
                 message: "Invalid file path",
             },
         },
@@ -85,7 +84,37 @@ const fileSchema = new mongoose.Schema(
             default: "pending",
             required: true,
         },
+        uploadType: {
+            type: String,
+            enum: ["single", "multipart"],
+            default: "single",
+            required: true,
+            immutable: true,
+        },
+        multipartUploadId: {
+            type: String,
+            trim: true,
+            maxlength: 1024,
+            default: null,
+        },
+        partSize: {
+            type: Number,
+            min: 1,
+            default: null,
+            validate: safeInteger,
+        },
+        partCount: {
+            type: Number,
+            min: 1,
+            max: 10000,
+            default: null,
+            validate: safeInteger,
+        },
         uploadedAt: {
+            type: Date,
+            default: null,
+        },
+        uploadExpiresAt: {
             type: Date,
             default: null,
         },
@@ -107,5 +136,6 @@ const fileSchema = new mongoose.Schema(
 fileSchema.index({ ownerId: 1, objectKey: 1 }, { unique: true });
 fileSchema.index({ ownerId: 1, spaceId: 1, createdAt: -1 });
 fileSchema.index({ ownerId: 1, status: 1, createdAt: -1 });
+fileSchema.index({ status: 1, uploadExpiresAt: 1 });
 
 export const File = mongoose.models.File || mongoose.model("File", fileSchema);
