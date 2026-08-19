@@ -13,6 +13,10 @@ export const extractCredential = async (req) => {
         throw new AppError("Use either API key or access token , not both");
     }
 
+    if (typeof accessToken !== "string" || typeof apikey !== "string") {
+        throw new AppError("Invalid Authincation type");
+    }
+
     if (apikey) {
         return {
             type: "apiKey",
