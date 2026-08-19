@@ -11,7 +11,6 @@ import {
   Copy,
   FileCode2,
   FileImage,
-  Folder,
   Gauge,
   Globe2,
   HardDrive,
@@ -37,7 +36,8 @@ const codeSamples = {
     '})',
     '',
     'const file = await storage.files.upload({',
-    "  folderId: 'fld_default_01',",
+    "  spaceId: 'spc_default_01',",
+    "  path: 'reports/august.pdf',",
     "  file: './august.pdf',",
     '})',
     '',
@@ -47,7 +47,8 @@ const codeSamples = {
   curl: [
     'curl --request POST https://api.domaindrop.dev/v1/files',
     "  --header 'Authorization: Bearer $DOMAIN_DROP_API_KEY'",
-    "  --form 'folderId=fld_default_01'",
+    "  --form 'spaceId=spc_default_01'",
+    "  --form 'path=reports/august.pdf'",
     "  --form 'file=@./august.pdf'",
   ].join(' \\\n'),
   python: [
@@ -57,7 +58,7 @@ const codeSamples = {
     "response = requests.post(",
     "    'https://api.domaindrop.dev/v1/files',",
     "    headers={'Authorization': f\"Bearer {os.environ['DOMAIN_DROP_API_KEY']}\"},",
-    "    data={'folderId': 'fld_default_01'},",
+    "    data={'spaceId': 'spc_default_01', 'path': 'reports/august.pdf'},",
     "    files={'file': open('./august.pdf', 'rb')},",
     ')',
     '',
@@ -72,10 +73,11 @@ const quickStartCode = [
   '  apiKey: process.env.DOMAIN_DROP_API_KEY,',
   '})',
   '',
-  'const folder = await drop.folders.getDefault()',
+  'const space = await drop.spaces.getDefault()',
   '',
   'const image = await drop.files.upload({',
-  '  folderId: folder.id,',
+  '  spaceId: space.id,',
+  "  path: 'images/launch.jpg',",
   "  file: './launch.jpg',",
   '})',
   '',
@@ -118,7 +120,7 @@ function FileExplorer() {
         <HardDrive size={16} aria-hidden="true" />
         <span>root</span>
         <ChevronRight size={14} aria-hidden="true" />
-        <Folder size={16} aria-hidden="true" />
+        <Boxes size={16} aria-hidden="true" />
         <strong>default</strong>
       </div>
       <div className="file-table">
@@ -277,8 +279,8 @@ function HomePage() {
           <div className="feature-copy">
             <SectionHeading
               eyebrow="A clean storage model"
-              title="A bucket for every account. A default folder from day one."
-              copy="Create more folders whenever you need them. Every upload targets a folder ID while DomainDrop handles bucket isolation, object keys, quotas, and delivery."
+              title="A bucket for every account. A default space from day one."
+              copy="Create spaces to separate projects, then use paths like images/launch.jpg inside them. DomainDrop handles bucket isolation, object keys, quotas, and delivery."
             />
             <div className="feature-points">
               <div>
@@ -292,11 +294,11 @@ function HomePage() {
               </div>
               <div>
                 <span className="feature-point-icon yellow">
-                  <Folder size={19} />
+                  <Boxes size={19} />
                 </span>
                 <p>
-                  <strong>Folders that make sense</strong>
-                  Start with the default folder and organize every upload by folder ID.
+                  <strong>Spaces that stay simple</strong>
+                  Pick a space ID and organize files with any nested path you need.
                 </p>
               </div>
               <div>
@@ -358,15 +360,15 @@ function HomePage() {
             </article>
             <article>
               <span className="step-number">02</span>
-              <Folder size={24} aria-hidden="true" />
-              <h3>Choose a folder</h3>
-              <p>Use the ready default folder or create one, then keep its folder ID.</p>
+              <Boxes size={24} aria-hidden="true" />
+              <h3>Choose a space</h3>
+              <p>Use the default space or create one to separate another project.</p>
             </article>
             <article>
               <span className="step-number">03</span>
               <Zap size={24} aria-hidden="true" />
               <h3>Upload and deliver</h3>
-              <p>Upload with the folder ID and receive the URL allowed by the bucket policy.</p>
+              <p>Upload with a space ID and path, then receive the URL allowed by the bucket policy.</p>
             </article>
           </div>
         </div>
@@ -774,7 +776,7 @@ function AboutPage() {
             <p className="eyebrow">The thesis</p>
             <h2>Object storage can have a human interface.</h2>
             <p>
-              Buckets are durable and scalable, but most users think in folders,
+              Buckets are durable and scalable, but products need spaces, paths,
               files, links, and permissions. DomainDrop bridges those two models:
               familiar on the surface, robust underneath.
             </p>
