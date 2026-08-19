@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 export const API_KEY_SCOPES = Object.freeze([
   "files:read",
   "files:write",
-  "folders:read",
-  "folders:write",
+  "spaces:read",
+  "spaces:write",
   "storage:read",
   "policy:write",
 ]);

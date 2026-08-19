@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-const normalizeFolderName = (name) =>
+const normalizeSpaceName = (name) =>
   name.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
 
-const folderSchema = new mongoose.Schema(
+const spaceSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -30,10 +30,14 @@ const folderSchema = new mongoose.Schema(
       required: true,
       immutable: true,
     },
-    parentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Folder",
-      default: null,
+    keyPrefix: {
+      type: String,
+      required: true,
+      unique: true,
+      immutable: true,
+      select: false,
+      maxlength: 31,
+      match: [/^spaces\/[a-f0-9]{24}$/, "Invalid space key prefix"],
     },
     isDefault: {
       type: Boolean,
@@ -47,24 +51,19 @@ const folderSchema = new mongoose.Schema(
   },
 );
 
-folderSchema.pre("validate", function normalizeName() {
+spaceSchema.pre("validate", function prepareSpace() {
   if (typeof this.name === "string") {
     this.name = this.name.trim().replace(/\s+/g, " ");
-    this.normalizedName = normalizeFolderName(this.name);
+    this.normalizedName = normalizeSpaceName(this.name);
   }
 
-  if (this.parentId && this._id.equals(this.parentId)) {
-    this.invalidate("parentId", "A folder cannot be its own parent");
-  }
-
-  if (this.isDefault && this.parentId) {
-    this.invalidate("parentId", "The default folder must be a root folder");
+  if (!this.keyPrefix) {
+    this.keyPrefix = `spaces/${this._id}`;
   }
 });
 
 function normalizeUpdatedName() {
   const update = this.getUpdate();
-
   if (!update || Array.isArray(update)) {
     return;
   }
@@ -77,23 +76,20 @@ function normalizeUpdatedName() {
   const name = suppliedName.trim().replace(/\s+/g, " ");
   if (update.$set) {
     update.$set.name = name;
-    update.$set.normalizedName = normalizeFolderName(name);
+    update.$set.normalizedName = normalizeSpaceName(name);
     return;
   }
 
   update.name = name;
-  update.normalizedName = normalizeFolderName(name);
+  update.normalizedName = normalizeSpaceName(name);
 }
 
-folderSchema.pre("findOneAndUpdate", normalizeUpdatedName);
-folderSchema.pre("updateOne", normalizeUpdatedName);
+spaceSchema.pre("findOneAndUpdate", normalizeUpdatedName);
+spaceSchema.pre("updateOne", normalizeUpdatedName);
 
-folderSchema.index(
-  { userId: 1, parentId: 1, normalizedName: 1 },
-  { unique: true },
-);
-folderSchema.index({ userId: 1, parentId: 1, createdAt: -1 });
-folderSchema.index(
+spaceSchema.index({ userId: 1, normalizedName: 1 }, { unique: true });
+spaceSchema.index({ userId: 1, createdAt: -1 });
+spaceSchema.index(
   { userId: 1, isDefault: 1 },
   {
     unique: true,
@@ -101,4 +97,4 @@ folderSchema.index(
   },
 );
 
-export const Folder = mongoose.models.Folder || mongoose.model("Folder", folderSchema);
+export const Space = mongoose.models.Space || mongoose.model("Space", spaceSchema);

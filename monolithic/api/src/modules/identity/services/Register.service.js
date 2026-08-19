@@ -3,7 +3,7 @@ import { cacheKey } from '../../../utils/cache/cacheKey.js';
 import { AppError } from '../../../utils/errors/AppError.js';
 import { transporter } from '../../../utils/mail/transporter.js';
 import { User } from '../models/user.Model.js';
-import { Folder } from '../../../models/folder.model.js';
+import { Space } from '../../../models/space.model.js';
 import { Storage } from '../../../models/storage.model.js';
 import { createBucket } from '../../../utils/minio/createBucket.js';
 import { plans } from '../../../constant/plan.js';
@@ -28,6 +28,12 @@ export const initRegisterService = async (req) => {
         if (existingUser.status === 'pending') {
             throw new AppError('Registration Already initiated', 400)
         }
+
+        if (['provisioning', 'provisioning_failed'].includes(existingUser.status)) {
+            throw new AppError('Registration verification already completed', 409)
+        }
+
+        throw new AppError('Account with this email cannot be registered', 409)
 
     }
 
@@ -65,6 +71,65 @@ export const initRegisterService = async (req) => {
     return;
 }
 
+export const provisionUserStorage = async (userId) => {
+    const bucketName = generateBucketName(userId);
+    const plan = plans.free;
+
+    await createBucket(bucketName, 'private');
+
+    const defaultSpace = await Space.exists({ userId, isDefault: true });
+    if (!defaultSpace) {
+        try {
+            await Space.create({
+                name: 'default',
+                description: 'default space',
+                userId,
+                isDefault: true
+            });
+        } catch (error) {
+            const createdByAnotherRequest = error?.code === 11000
+                ? await Space.exists({ userId, isDefault: true })
+                : null;
+
+            if (!createdByAnotherRequest) {
+                throw error;
+            }
+        }
+    }
+
+    await Storage.updateOne(
+        { userId },
+        {
+            $set: {
+                policy: {
+                    visibility: 'private',
+                    appliedVisibility: 'private',
+                    status: 'applied',
+                    appliedAt: new Date()
+                },
+                quota: {
+                    maxBytes: plan.maxStorage,
+                    maxObjects: plan.maxFiles,
+                    maxFileSize: plan.maxFileSize
+                },
+                status: 'active'
+            },
+            $setOnInsert: {
+                userId,
+                bucket: {
+                    name: bucketName,
+                    provider: 'minio',
+                },
+                usage: {
+                    objects: 0,
+                    bytes: 0
+                }
+            }
+        },
+        { upsert: true, runValidators: true }
+    );
+}
+
 export const verifyRegisterService = async (req) => {
     const redis = getRedisClient();
 
@@ -78,24 +143,28 @@ export const verifyRegisterService = async (req) => {
         throw new AppError('Registration expired or Registration not initiated. Please register again', 400);
     }
 
-    if (user.status !== 'pending') {
+    if (user.status === 'provisioning') {
+        throw new AppError('Account setup is already in progress', 409);
+    }
+
+    if (!['pending', 'provisioning_failed'].includes(user.status)) {
         throw new AppError('Registration cannot be verified for this account', 403);
     }
 
-    if (user.registrationExpiresAt && user.registrationExpiresAt <= new Date()) {
+    if (user.status === 'pending' && user.registrationExpiresAt && user.registrationExpiresAt <= new Date()) {
         await User.deleteOne({ _id: user._id, status: "pending" });
         throw new AppError('Registration expired. Please register again', 400);
     }
 
-    if (cachedOtp.otp !== otp) {
+    if (user.status === 'pending' && cachedOtp.otp !== otp) {
         throw new AppError("Invalid or Expired Otp", 400);
     }
 
     const userData = await User.findOneAndUpdate(
-        { _id: user._id, status: "pending" },
+        { _id: user._id, status: user.status },
         {
             $set: {
-                status: "active",
+                status: "provisioning",
                 emailVerifiedAt: new Date()
             },
             $unset: { registrationExpiresAt: "" }
@@ -103,43 +172,37 @@ export const verifyRegisterService = async (req) => {
         { new: true }
     );
 
-    const bucketName = generateBucketName(userData._id);
-    const plan = plans.free;
+    if (!userData) {
+        throw new AppError('Account setup is already in progress', 409);
+    }
 
-    // here i create the bucket and set the policy
-    await createBucket(bucketName, 'private');
+    try {
+        await provisionUserStorage(userData._id);
 
-    await Folder.create({
-        name: 'default',
-        description: 'default Folder',
-        userId: userData._id,
-        parentId: null,
-        isDefault: true
-    });
+        const activationResult = await User.updateOne(
+            { _id: userData._id, status: 'provisioning' },
+            {
+                $set: { status: 'active' },
+                $unset: { provisioningError: '' }
+            }
+        );
 
-    await Storage.create({
-        userId: userData._id,
-        bucket: {
-            name: bucketName,
-            provider: 'minio',
-        },
-        policy: {
-            visibility: 'private',
-            appliedVisibility: 'private',
-            status: 'applied',
-            appliedAt: new Date()
-        },
-        quota: {
-            maxBytes: plan.maxStorage,
-            maxObjects: plan.maxFiles,
-            maxFileSize: plan.maxFileSize
-        },
-        usage: {
-            objects: 0,
-            bytes: 0
-        },
-        status: "active"
-    });
+        if (activationResult.matchedCount !== 1) {
+            throw new Error('Unable to activate provisioned account');
+        }
 
-    await redis.del(redisKey);
+        await redis.del(redisKey);
+    } catch (error) {
+        await User.updateOne(
+            { _id: userData._id, status: 'provisioning' },
+            {
+                $set: {
+                    status: 'provisioning_failed',
+                    provisioningError: String(error.message || 'Account setup failed').slice(0, 500)
+                }
+            }
+        );
+
+        throw new AppError('Account setup failed. Please try again', 503);
+    }
 }

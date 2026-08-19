@@ -5,11 +5,9 @@ import { buildBucketPolicy } from "./policy.js"
 export async function createBucket(bucketName, policyType = 'private') {
     const exists = await client.bucketExists(bucketName)
 
-    if (exists) {
-        throw new Error(`Bucket "${bucketName}" already exists`)
+    if (!exists) {
+        await client.makeBucket(bucketName)
     }
-
-    await client.makeBucket(bucketName)
 
     try {
         const policy = buildBucketPolicy(bucketName, policyType)
@@ -17,7 +15,7 @@ export async function createBucket(bucketName, policyType = 'private') {
         await client.setBucketPolicy(bucketName, policy)
 
         console.log(
-            `[minio] bucket "${bucketName}" created with "${policyType}" policy`
+            `[minio] bucket "${bucketName}" ready with "${policyType}" policy`
         )
     } catch (err) {
         console.error(
@@ -26,12 +24,13 @@ export async function createBucket(bucketName, policyType = 'private') {
         )
 
         throw new Error(
-            `Bucket "${bucketName}" created but policy update failed`
+            `Bucket "${bucketName}" policy update failed`
         )
     }
 
     return {
         bucketName,
         policyType,
+        created: !exists,
     }
 }

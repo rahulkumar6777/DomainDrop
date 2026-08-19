@@ -50,10 +50,28 @@ const fileSchema = new mongoose.Schema(
             match: [/^[a-f0-9]{64}$/, "Invalid SHA-256 checksum"],
             default: null,
         },
-        folderId: {
+        spaceId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Folder",
+            ref: "Space",
             required: true,
+        },
+        relativePath: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 1024,
+            immutable: true,
+            validate: {
+                validator: (path) => {
+                    if (typeof path !== "string" || path.startsWith("/") || path.endsWith("/")) {
+                        return false;
+                    }
+
+                    const parts = path.split("/");
+                    return !path.includes("\\") && parts.every((part) => part && part !== "." && part !== "..");
+                },
+                message: "Invalid file path",
+            },
         },
         ownerId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -87,7 +105,7 @@ const fileSchema = new mongoose.Schema(
 
 // An object key only needs to be unique inside its owner's isolated bucket.
 fileSchema.index({ ownerId: 1, objectKey: 1 }, { unique: true });
-fileSchema.index({ ownerId: 1, folderId: 1, createdAt: -1 });
+fileSchema.index({ ownerId: 1, spaceId: 1, createdAt: -1 });
 fileSchema.index({ ownerId: 1, status: 1, createdAt: -1 });
 
 export const File = mongoose.models.File || mongoose.model("File", fileSchema);
