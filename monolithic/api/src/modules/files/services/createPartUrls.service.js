@@ -69,6 +69,7 @@ export const createPartUrls = async (req) => {
 
     return {
         parts,
+        etagHeader: "ETag",
         expiresAt: new Date(Date.now() + expiresIn * 1000),
     };
 };

@@ -13,8 +13,8 @@ export const createUploadUrlValidator = [
         .custom(isValidRelativePath)
         .withMessage("Invalid file path"),
     body("size")
-        .isInt({ min: 0, max: Number.MAX_SAFE_INTEGER })
-        .withMessage("File size must be a non-negative integer")
+        .isInt({ min: 1, max: Number.MAX_SAFE_INTEGER })
+        .withMessage("File size must be a positive integer")
         .toInt(),
     body("mimeType")
         .optional()

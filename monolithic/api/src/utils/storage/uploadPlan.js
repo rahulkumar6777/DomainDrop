@@ -8,15 +8,15 @@ export const MULTIPART_UPLOAD_EXPIRY_SECONDS = 24 * 60 * 60;
 export const PART_URL_EXPIRY_SECONDS = 60 * 60;
 
 export const createUploadPlan = (size) => {
-    if (!Number.isSafeInteger(size) || size < 0) {
-        throw new TypeError("File size must be a non-negative safe integer");
+    if (!Number.isSafeInteger(size) || size < 1) {
+        throw new TypeError("File size must be a positive safe integer");
     }
 
     if (size <= MULTIPART_UPLOAD_THRESHOLD) {
         return {
             type: "single",
-            partSize: null,
-            partCount: null,
+            partSize: size,
+            partCount: 1,
             expiresIn: SINGLE_UPLOAD_EXPIRY_SECONDS,
         };
     }

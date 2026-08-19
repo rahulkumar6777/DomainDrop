@@ -8,6 +8,8 @@ export const FILE_STATUSES = Object.freeze([
     "failed",
 ]);
 
+const DELETABLE_FILE_STATUSES = Object.freeze(["pending", "ready", "failed"]);
+
 const safeInteger = {
     validator: Number.isSafeInteger,
     message: "Upload part values must be safe integers",
@@ -38,7 +40,7 @@ const fileSchema = new mongoose.Schema(
         size: {
             type: Number,
             required: true,
-            min: 0,
+            min: 1,
             validate: {
                 validator: Number.isSafeInteger,
                 message: "File size must be a safe integer",
@@ -125,6 +127,26 @@ const fileSchema = new mongoose.Schema(
             default: null,
             select: false,
         },
+        deletionFromStatus: {
+            type: String,
+            enum: DELETABLE_FILE_STATUSES,
+            default: null,
+        },
+        deleteReason: {
+            type: String,
+            enum: ["user", "expired"],
+            default: null,
+        },
+        deletionLeaseId: {
+            type: String,
+            default: null,
+            select: false,
+        },
+        deletionLeaseUntil: {
+            type: Date,
+            default: null,
+            select: false,
+        },
     },
     {
         timestamps: true,
@@ -137,5 +159,6 @@ fileSchema.index({ ownerId: 1, objectKey: 1 }, { unique: true });
 fileSchema.index({ ownerId: 1, spaceId: 1, createdAt: -1 });
 fileSchema.index({ ownerId: 1, status: 1, createdAt: -1 });
 fileSchema.index({ status: 1, uploadExpiresAt: 1 });
+fileSchema.index({ status: 1, deletionLeaseUntil: 1 });
 
 export const File = mongoose.models.File || mongoose.model("File", fileSchema);

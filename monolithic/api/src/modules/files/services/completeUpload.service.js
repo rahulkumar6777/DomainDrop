@@ -2,29 +2,13 @@ import minioClient from "../../../utils/minio/minio.js";
 import { File } from "../../../models/file.model.js";
 import { Storage } from "../../../models/storage.model.js";
 import { AppError } from "../../../utils/errors/AppError.js";
-import { commitFileReservation, releaseFileReservation } from "./fileQuota.service.js";
+import { clearQuotaEvent, commitFileReservation } from "./fileQuota.service.js";
 import { formatFile } from "./fileResponse.js";
+import { claimFileDeletion, finalizeFileDeletion } from "./fileDeletion.service.js";
 
-const cleanupPendingUpload = async (bucketName, file) => {
+const clearQuotaEventQuietly = async (userId, eventId) => {
     try {
-        if (file.uploadType === "multipart" && file.multipartUploadId) {
-            await minioClient.abortMultipartUpload(
-                bucketName,
-                file.objectKey,
-                file.multipartUploadId,
-            );
-            return;
-        }
-
-        await minioClient.removeObject(bucketName, file.objectKey);
-    } catch (_error) {
-        // Quota must still be released if cleanup is temporarily unavailable.
-    }
-};
-
-const removeStoredObject = async (bucketName, objectKey) => {
-    try {
-        await minioClient.removeObject(bucketName, objectKey);
+        await clearQuotaEvent(userId, eventId);
     } catch (_error) {
     }
 };
@@ -60,7 +44,10 @@ export const completeUpload = async (req) => {
         throw new AppError("File not found", 404);
     }
 
+    const quotaEventId = `file-complete:${file._id}`;
+
     if (file.status === "ready") {
+        await clearQuotaEventQuietly(userId, quotaEventId);
         return formatFile(file);
     }
 
@@ -77,72 +64,48 @@ export const completeUpload = async (req) => {
     }
 
     if (file.uploadExpiresAt && file.uploadExpiresAt <= new Date()) {
-        const expiredFile = await File.findOneAndDelete({
-            _id: file._id,
-            ownerId: userId,
-            status: "pending",
-        });
-
-        if (expiredFile) {
-            await releaseFileReservation(userId, file.size);
-            await cleanupPendingUpload(storage.bucket.name, file);
-        }
-
+        const expiredFile = await claimFileDeletion(userId, file._id, "expired");
+        await finalizeFileDeletion(expiredFile);
         throw new AppError("Upload URL expired", 410);
     }
 
     let objectStat = null;
 
-    if (file.uploadType === "multipart") {
-        if (!file.multipartUploadId) {
-            throw new AppError("Multipart upload is not initialized", 409);
-        }
+    if (!file.multipartUploadId) {
+        throw new AppError("Upload is not initialized", 409);
+    }
 
+    try {
+        objectStat = await minioClient.statObject(storage.bucket.name, file.objectKey);
+    } catch (_error) {
+    }
+
+    if (!objectStat) {
         const completedParts = getCompletedParts(file, req.body?.parts);
 
         try {
-            objectStat = await minioClient.statObject(storage.bucket.name, file.objectKey);
+            await minioClient.completeMultipartUpload(
+                storage.bucket.name,
+                file.objectKey,
+                file.multipartUploadId,
+                completedParts,
+            );
+            objectStat = await minioClient.statObject(
+                storage.bucket.name,
+                file.objectKey,
+            );
         } catch (_error) {
-        }
-
-        if (!objectStat) {
-            try {
-                await minioClient.completeMultipartUpload(
-                    storage.bucket.name,
-                    file.objectKey,
-                    file.multipartUploadId,
-                    completedParts,
-                );
-                objectStat = await minioClient.statObject(
-                    storage.bucket.name,
-                    file.objectKey,
-                );
-            } catch (_error) {
-                throw new AppError("Multipart upload could not be completed", 409);
-            }
-        }
-    } else {
-        try {
-            objectStat = await minioClient.statObject(storage.bucket.name, file.objectKey);
-        } catch (_error) {
-            throw new AppError("Upload is not completed yet", 409);
+            throw new AppError("Upload could not be completed", 409);
         }
     }
 
     if (objectStat.size !== file.size) {
-        const invalidFile = await File.findOneAndDelete({
-            _id: file._id,
-            ownerId: userId,
-            status: "pending",
-        });
-
-        if (invalidFile) {
-            await releaseFileReservation(userId, file.size);
-            await removeStoredObject(storage.bucket.name, file.objectKey);
-        }
-
+        const invalidFile = await claimFileDeletion(userId, file._id, "expired");
+        await finalizeFileDeletion(invalidFile);
         throw new AppError("Uploaded file size does not match", 400);
     }
+
+    await commitFileReservation(userId, file.size, quotaEventId);
 
     const completedFile = await File.findOneAndUpdate(
         { _id: file._id, ownerId: userId, status: "pending" },
@@ -161,12 +124,13 @@ export const completeUpload = async (req) => {
     if (!completedFile) {
         const currentFile = await File.findOne({ _id: file._id, ownerId: userId });
         if (currentFile?.status === "ready") {
+            await clearQuotaEventQuietly(userId, quotaEventId);
             return formatFile(currentFile);
         }
 
         throw new AppError("File upload cannot be completed", 409);
     }
 
-    await commitFileReservation(userId, completedFile.size);
+    await clearQuotaEventQuietly(userId, quotaEventId);
     return formatFile(completedFile);
 };

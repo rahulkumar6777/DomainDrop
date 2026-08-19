@@ -99,6 +99,11 @@ const usageSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    appliedEvents: {
+      type: [String],
+      default: () => [],
+      select: false,
+    },
   },
   { _id: false },
 );

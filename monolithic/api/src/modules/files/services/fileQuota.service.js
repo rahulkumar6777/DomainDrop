@@ -58,40 +58,91 @@ export const reserveFileQuota = async (userId, size) => {
     throw new AppError("Storage quota exceeded", 413);
 };
 
-export const releaseFileReservation = async (userId, size) => {
+const applyQuotaChange = async (userId, filter, change, eventId = null) => {
+    const eventFilter = eventId
+        ? { "usage.appliedEvents": { $ne: eventId } }
+        : {};
+    const eventUpdate = eventId
+        ? { $addToSet: { "usage.appliedEvents": eventId } }
+        : {};
+
+    const result = await Storage.updateOne(
+        { userId, ...filter, ...eventFilter },
+        { $inc: change, ...eventUpdate },
+    );
+
+    if (result.modifiedCount === 1) {
+        return;
+    }
+
+    if (eventId) {
+        const alreadyApplied = await Storage.exists({
+            userId,
+            "usage.appliedEvents": eventId,
+        });
+        if (alreadyApplied) {
+            return;
+        }
+    }
+
+    throw new AppError("Storage accounting conflict", 409);
+};
+
+export const clearQuotaEvent = async (userId, eventId) => {
     await Storage.updateOne(
         { userId },
-        {
-            $inc: {
-                "usage.reservedBytes": -size,
-                "usage.reservedObjects": -1,
-            },
-        },
+        { $pull: { "usage.appliedEvents": eventId } },
     );
 };
 
-export const commitFileReservation = async (userId, size) => {
-    await Storage.updateOne(
-        { userId },
+export const hasQuotaEvent = (userId, eventId) => Storage.exists({
+    userId,
+    "usage.appliedEvents": eventId,
+});
+
+export const releaseFileReservation = async (userId, size, eventId = null) => {
+    await applyQuotaChange(
+        userId,
         {
-            $inc: {
-                "usage.reservedBytes": -size,
-                "usage.reservedObjects": -1,
-                "usage.bytes": size,
-                "usage.objects": 1,
-            },
+            "usage.reservedBytes": { $gte: size },
+            "usage.reservedObjects": { $gte: 1 },
         },
+        {
+            "usage.reservedBytes": -size,
+            "usage.reservedObjects": -1,
+        },
+        eventId,
     );
 };
 
-export const removeFileUsage = async (userId, size) => {
-    await Storage.updateOne(
-        { userId },
+export const commitFileReservation = async (userId, size, eventId) => {
+    await applyQuotaChange(
+        userId,
         {
-            $inc: {
-                "usage.bytes": -size,
-                "usage.objects": -1,
-            },
+            "usage.reservedBytes": { $gte: size },
+            "usage.reservedObjects": { $gte: 1 },
         },
+        {
+            "usage.reservedBytes": -size,
+            "usage.reservedObjects": -1,
+            "usage.bytes": size,
+            "usage.objects": 1,
+        },
+        eventId,
+    );
+};
+
+export const removeFileUsage = async (userId, size, eventId) => {
+    await applyQuotaChange(
+        userId,
+        {
+            "usage.bytes": { $gte: size },
+            "usage.objects": { $gte: 1 },
+        },
+        {
+            "usage.bytes": -size,
+            "usage.objects": -1,
+        },
+        eventId,
     );
 };

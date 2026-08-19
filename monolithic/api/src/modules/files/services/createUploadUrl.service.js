@@ -70,22 +70,22 @@ export const createUploadUrl = async (req) => {
     }
 
     try {
+        multipartUploadId = await minioClient.initiateNewMultipartUpload(
+            storage.bucket.name,
+            objectKey,
+            { "Content-Type": file.mimeType },
+        );
+
+        const updatedFile = await File.updateOne(
+            { _id: file._id, ownerId: userId, status: "pending" },
+            { $set: { multipartUploadId } },
+        );
+
+        if (updatedFile.matchedCount !== 1) {
+            throw new AppError("Upload could not be created", 409);
+        }
+
         if (uploadPlan.type === "multipart") {
-            multipartUploadId = await minioClient.initiateNewMultipartUpload(
-                storage.bucket.name,
-                objectKey,
-                { "Content-Type": file.mimeType },
-            );
-
-            const updatedFile = await File.updateOne(
-                { _id: file._id, ownerId: userId, status: "pending" },
-                { $set: { multipartUploadId } },
-            );
-
-            if (updatedFile.matchedCount !== 1) {
-                throw new AppError("Multipart upload could not be created", 409);
-            }
-
             return {
                 file: formatFile(file),
                 upload: {
@@ -99,10 +99,15 @@ export const createUploadUrl = async (req) => {
             };
         }
 
-        const url = await minioClient.presignedPutObject(
+        const url = await minioClient.presignedUrl(
+            "PUT",
             storage.bucket.name,
             objectKey,
             uploadPlan.expiresIn,
+            {
+                partNumber: "1",
+                uploadId: multipartUploadId,
+            },
         );
 
         return {
@@ -111,9 +116,12 @@ export const createUploadUrl = async (req) => {
                 type: "single",
                 url,
                 method: "PUT",
+                partNumber: 1,
+                etagHeader: "ETag",
                 headers: {
                     "Content-Type": file.mimeType,
                 },
+                completeEndpoint: `/api/v1/files/${file._id}/complete`,
                 expiresAt: file.uploadExpiresAt,
             },
         };
