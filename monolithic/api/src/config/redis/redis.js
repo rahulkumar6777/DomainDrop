@@ -10,7 +10,8 @@ export const connectRedis = async () => {
             enableReadyCheck: true,
             lazyConnect: true
         });
-        await redis.set('foo', 'bar');
+        await redis.connect();
+        await redis.ping();
         console.log("Redis Connected")
     } catch (error) {
         console.error('Error connecting to Redis:', error);

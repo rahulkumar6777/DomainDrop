@@ -1,4 +1,4 @@
-import { ApiKey } from "../../../models/apikeys.model.js";
+import { API_KEY_SCOPES, ApiKey } from "../../../models/apikeys.model.js";
 import { getRedisClient } from "../../../config/redis/redis.js";
 import { cacheApiKey } from "../../../utils/cache/apiKeyCache.js";
 import { AppError } from "../../../utils/errors/AppError.js";
@@ -6,21 +6,28 @@ import { generateApiKey, getApiKeyPrefix, hashApiKey, } from "../../../utils/gen
 
 export const createApiKey = async (req) => {
 
-    const userId = req.auth?.userId ?? req.user?._id;
-    if (!userId) {
+    if (req.auth?.type !== "jwt" || !req.auth.userId) {
         throw new AppError("Unauthorized request", 401);
     }
 
-    if (req.auth?.type && req.auth.type !== "jwt") {
-        throw new AppError("API keys can only be managed with a user session", 403);
-    }
-
+    const userId = req.auth.userId;
     const name = req.body?.apiKeyName;
     const scopes = req.body?.apiKeyScope;
     const expiresAt = req.body?.expiresAt ? new Date(req.body.expiresAt) : null;
 
+    if (name !== undefined && (typeof name !== "string" || !name.trim() || name.trim().length > 80)) {
+        throw new AppError("API key name must be between 1 and 80 characters", 400);
+    }
+
     if (scopes !== undefined && !Array.isArray(scopes)) {
         throw new AppError("scopes must be an array", 400);
+    }
+
+    if (scopes !== undefined) {
+        const invalidScopes = scopes.filter((scope) => !API_KEY_SCOPES.includes(scope));
+        if (scopes.length === 0 || new Set(scopes).size !== scopes.length || invalidScopes.length > 0) {
+            throw new AppError("scopes must contain unique, supported values", 400);
+        }
     }
 
     if (expiresAt && (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date())) {
@@ -31,7 +38,7 @@ export const createApiKey = async (req) => {
     const apiKeyHash = hashApiKey(rawApiKey);
     const apiKey = await ApiKey.create({
         userId,
-        name,
+        name: name?.trim(),
         keyPrefix: getApiKeyPrefix(rawApiKey),
         keyHash: apiKeyHash,
         scopes,

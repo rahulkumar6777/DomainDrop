@@ -6,22 +6,31 @@ import { cacheApiKey, getCachedApiKey } from '../utils/cache/apiKeyCache.js';
 import { getRedisClient } from '../config/redis/redis.js';
 import { ApiKey } from '../models/apikeys.model.js';
 
+
+const API_KEY_PATTERN = /^dd_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$/;
+
+
 const sendError = (res, status, message) => {
     return res.status(status).json({ success: false, message });
 };
 
+const isExpired = (expiresAt) => Boolean(expiresAt) && new Date(expiresAt).getTime() <= Date.now();
+
 
 export const authReq = async (req, res, next) => {
+    let credential;
 
-    const { type, value } = await extractCredential(req);
-
-    if (!type) {
-        return sendError(res, 401, "UnAuthorized Request");
+    try {
+        credential = extractCredential(req);
+    } catch (error) {
+        return sendError(res, error.status ?? 401, error.msg ?? "Authentication failed");
     }
 
-    if (type === "accessToken") {
+    const { type, value } = credential;
+
+    if (type === "jwt") {
         try {
-            const decoded = jwt.verify(value, envs.ACCESS_TOKEN_SECRET)
+            const decoded = jwt.verify(value, envs.ACCESS_TOKEN_SECRET);
             if (!decoded?._id) {
                 return sendError(res, 401, "Invalid access token");
             }
@@ -40,11 +49,8 @@ export const authReq = async (req, res, next) => {
         }
     }
 
-    if (type === "apiKey") {
-
-        const API_KEY_PATTERN = /^dd_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$/;
-
-        if (!API_KEY_PATTERN.test(credential)) {
+    if (type === "api-key") {
+        if (!API_KEY_PATTERN.test(value)) {
             return sendError(res, 401, "Invalid API key");
         }
 
@@ -57,11 +63,9 @@ export const authReq = async (req, res, next) => {
             redis = getRedisClient();
             apiKey = await getCachedApiKey(redis, apikeyhash);
         } catch (_error) {
-
         }
 
         try {
-
             if (!apiKey) {
                 apiKey = await ApiKey.findOne({ keyHash: apikeyhash })
                     .select("_id userId keyPrefix scopes status expiresAt")
@@ -81,7 +85,6 @@ export const authReq = async (req, res, next) => {
                 try {
                     await ApiKey.updateOne({ _id: apiKey._id }, { $set: { lastUsedAt: new Date() } });
                 } catch (_error) {
-
                 }
             }
 
@@ -104,4 +107,6 @@ export const authReq = async (req, res, next) => {
             return next(error);
         }
     }
-}
+
+    return sendError(res, 401, "Unsupported authentication type");
+};

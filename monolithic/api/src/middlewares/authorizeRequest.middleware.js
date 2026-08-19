@@ -1,12 +1,12 @@
 import { API_KEY_SCOPES } from "../models/apikeys.model.js";
 
 
-const sendError = (res, status, message) => {
-    return res.status(status).json({ success: false, message });
+const sendError = (res, status, message, extra = {}) => {
+    return res.status(status).json({ success: false, message, ...extra });
 };
 
 
-const requireScopes = (...requiredScopes) => {
+export const requireScopes = (...requiredScopes) => {
 
     if (requiredScopes.length === 0) {
         throw new TypeError("requireScopes needs at least one scope");
@@ -27,6 +27,10 @@ const requireScopes = (...requiredScopes) => {
 
         if (req.auth.type === "jwt") {
             return next();
+        }
+
+        if (req.auth.type !== "api-key") {
+            return sendError(res, 401, "Invalid authentication context");
         }
 
         const grantedScopes = new Set(req.auth.scopes ?? []);

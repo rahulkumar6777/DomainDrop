@@ -5,7 +5,7 @@ import { cacheKeyExpiry } from "./cacheKeyExpiry.js";
 const API_KEY_CACHE_TTL_SECONDS = cacheKeyExpiry.apikeyCacheExpiry();
 
 
-// this function return apikey expirey of apikey 
+
 const getCacheTtl = (expiresAt, now = new Date()) => {
   if (!expiresAt) {
     return API_KEY_CACHE_TTL_SECONDS;
@@ -79,6 +79,5 @@ export const getCachedApiKey = async (redis, apiKeyHash) => {
   }
 };
 
-export const invalidateApiKeyCache = (redis, apiKeyHash) => {
-  redis.del(cacheKey.ApiKey(apiKeyHash))
-}
+export const invalidateApiKeyCache = (redis, apiKeyHash) =>
+  redis.del(cacheKey.ApiKey(apiKeyHash));

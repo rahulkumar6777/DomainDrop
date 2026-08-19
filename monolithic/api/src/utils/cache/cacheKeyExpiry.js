@@ -1,3 +1,3 @@
 export const cacheKeyExpiry = {
-    apikeyCacheExpiry: () => 1 * 60 * 60
+    apikeyCacheExpiry: () => 5 * 60
 }
