@@ -1,4 +1,9 @@
 import mongoose from "mongoose";
+import {
+  STORAGE_CORS_LIMITS,
+  STORAGE_CORS_METHODS,
+  createDefaultStorageCorsConfiguration,
+} from "../constant/storageCors.js";
 
 export const STORAGE_VISIBILITIES = Object.freeze(["private", "public-read"]);
 export const STORAGE_STATUSES = Object.freeze([
@@ -46,6 +51,99 @@ const policySchema = new mongoose.Schema(
     appliedVisibility: {
       type: String,
       enum: STORAGE_VISIBILITIES,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "applied", "error"],
+      default: "pending",
+      required: true,
+    },
+    appliedAt: {
+      type: Date,
+      default: null,
+    },
+    lastError: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: null,
+      select: false,
+    },
+  },
+  { _id: false },
+);
+
+const uniqueValues = {
+  validator: (values) => new Set(values.map((value) => value.toLowerCase())).size === values.length,
+  message: "CORS values must be unique",
+};
+
+const corsRuleSchema = new mongoose.Schema(
+  {
+    allowedOrigins: {
+      type: [{ type: String, trim: true, maxlength: 255 }],
+      default: () => [],
+      validate: [
+        uniqueValues,
+        {
+          validator: (values) => values.length <= STORAGE_CORS_LIMITS.maxOrigins,
+          message: `CORS supports at most ${STORAGE_CORS_LIMITS.maxOrigins} custom origins`,
+        },
+      ],
+    },
+    allowedMethods: {
+      type: [{ type: String, enum: STORAGE_CORS_METHODS }],
+      default: () => ["GET", "HEAD", "PUT"],
+      validate: [
+        uniqueValues,
+        {
+          validator: (values) => values.length > 0,
+          message: "CORS requires at least one allowed method",
+        },
+      ],
+    },
+    allowedHeaders: {
+      type: [{ type: String, trim: true, maxlength: 128 }],
+      default: () => ["*"],
+      validate: [
+        uniqueValues,
+        {
+          validator: (values) => values.length <= STORAGE_CORS_LIMITS.maxHeaders,
+          message: `CORS supports at most ${STORAGE_CORS_LIMITS.maxHeaders} allowed headers`,
+        },
+      ],
+    },
+    exposeHeaders: {
+      type: [{ type: String, trim: true, maxlength: 128 }],
+      default: () => ["ETag"],
+      validate: [
+        uniqueValues,
+        {
+          validator: (values) => values.length <= STORAGE_CORS_LIMITS.maxHeaders,
+          message: `CORS supports at most ${STORAGE_CORS_LIMITS.maxHeaders} exposed headers`,
+        },
+      ],
+    },
+    maxAgeSeconds: {
+      type: Number,
+      min: 0,
+      max: STORAGE_CORS_LIMITS.maxAgeSeconds,
+      validate: nonNegativeInteger,
+      default: 3600,
+    },
+  },
+  { _id: false },
+);
+
+const corsSchema = new mongoose.Schema(
+  {
+    configuration: {
+      type: corsRuleSchema,
+      default: createDefaultStorageCorsConfiguration,
+    },
+    appliedConfiguration: {
+      type: corsRuleSchema,
       default: null,
     },
     status: {
@@ -147,6 +245,10 @@ const storageSchema = new mongoose.Schema(
     },
     policy: {
       type: policySchema,
+      default: () => ({}),
+    },
+    cors: {
+      type: corsSchema,
       default: () => ({}),
     },
     usage: {

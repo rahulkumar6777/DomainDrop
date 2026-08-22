@@ -75,7 +75,8 @@ export const provisionUserStorage = async (userId) => {
     const bucketName = generateBucketName(userId);
     const plan = plans.free;
 
-    await createBucket(bucketName, 'private');
+    const provisionedBucket = await createBucket(bucketName, 'private');
+    const appliedAt = new Date();
 
     const defaultSpace = await Space.exists({ userId, isDefault: true });
     if (!defaultSpace) {
@@ -105,7 +106,13 @@ export const provisionUserStorage = async (userId) => {
                     visibility: 'private',
                     appliedVisibility: 'private',
                     status: 'applied',
-                    appliedAt: new Date()
+                    appliedAt
+                },
+                cors: {
+                    configuration: provisionedBucket.corsConfiguration,
+                    appliedConfiguration: provisionedBucket.corsConfiguration,
+                    status: 'applied',
+                    appliedAt
                 },
                 quota: {
                     maxBytes: plan.maxStorage,

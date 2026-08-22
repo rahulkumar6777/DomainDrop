@@ -38,5 +38,5 @@ export const envs = {
     MINIO_PORT: process.env.MINIO_PORT,
     MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
     MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
-    FRONTEND_URI: process.env.FRONTEND_URI || "http://localhost:5173"
+    FRONTEND_URI: process.env.FRONTEND_URI
 }

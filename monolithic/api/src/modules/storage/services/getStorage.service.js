@@ -1,9 +1,11 @@
 import { Storage } from "../../../models/storage.model.js";
 import { AppError } from "../../../utils/errors/AppError.js";
+import { storageCorsResponse } from "./storageCorsResponse.js";
 
 const storageResponse = (storage) => ({
     bucket: storage.bucket,
     policy: storage.policy,
+    cors: storageCorsResponse(storage.cors),
     usage: storage.usage,
     quota: storage.quota,
     status: storage.status,
@@ -18,7 +20,7 @@ export const getStorage = async (req) => {
     }
 
     const storage = await Storage.findOne({ userId })
-        .select("bucket policy usage quota status createdAt updatedAt")
+        .select("bucket policy cors usage quota status createdAt updatedAt")
         .lean();
 
     if (!storage) {
@@ -27,4 +29,3 @@ export const getStorage = async (req) => {
 
     return storageResponse(storage);
 };
-

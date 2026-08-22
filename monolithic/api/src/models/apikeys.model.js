@@ -7,6 +7,7 @@ export const API_KEY_SCOPES = Object.freeze([
   "spaces:write",
   "storage:read",
   "policy:write",
+  "cors:write",
 ]);
 
 export const DEFAULT_API_KEY_SCOPES = Object.freeze([...API_KEY_SCOPES]);

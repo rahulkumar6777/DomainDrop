@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node ./src/index.js",
-    "dev": "nodemon ./src/index.js"
+    "dev": "nodemon ./src/index.js",
+    "sync:bucket-cors": "node ./src/commands/syncBucketCors.js"
   },
   "keywords": [],
   "author": "",
