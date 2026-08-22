@@ -14,6 +14,7 @@ const scopes = [
   ['spaces:write', 'Create, update, and delete custom spaces'],
   ['storage:read', 'Read bucket, usage, policy, and quota'],
   ['policy:write', 'Switch the entire bucket between private and public-read'],
+  ['cors:write', 'Set additional browser origins and CORS rules for the bucket'],
 ]
 
 function AuthenticationPage() {

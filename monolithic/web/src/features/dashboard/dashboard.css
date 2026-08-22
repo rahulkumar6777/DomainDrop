@@ -1098,6 +1098,164 @@
   font-weight: 700;
 }
 
+.cors-form {
+  display: grid;
+  gap: 13px;
+}
+
+.cors-required-origin {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  min-height: 62px;
+  padding: 11px 13px;
+  background: var(--cyan-soft);
+  border: 1px solid #a9d7d3;
+  border-radius: 6px;
+}
+
+.cors-required-origin > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  background: #ffffff;
+  border: 1px solid #b9dbd8;
+  border-radius: 5px;
+}
+
+.cors-required-origin > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.cors-required-origin small,
+.cors-required-origin strong {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.cors-required-origin code {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cors-required-origin strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cyan);
+}
+
+.cors-form > label,
+.cors-form legend,
+.cors-field-grid label > span {
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.cors-form textarea,
+.cors-field-grid input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  outline: 0;
+}
+
+.cors-form textarea {
+  resize: vertical;
+}
+
+.cors-form textarea:focus,
+.cors-field-grid input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(7, 156, 168, 0.1);
+}
+
+.cors-form fieldset {
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.cors-form legend {
+  margin-bottom: 8px;
+}
+
+.cors-methods {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.cors-methods label {
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cors-methods label:has(input:checked) {
+  color: var(--cyan);
+  background: var(--cyan-soft);
+  border-color: var(--cyan);
+}
+
+.cors-methods input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--cyan);
+}
+
+.cors-methods span {
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.cors-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+}
+
+.cors-field-grid label {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.cors-field-grid label:last-child {
+  grid-column: 1 / -1;
+  max-width: calc(50% - 6px);
+}
+
+.cors-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
 .modal-layer {
   position: fixed;
   inset: 0;
@@ -1586,6 +1744,27 @@
 
   .scope-list {
     grid-template-columns: 1fr;
+  }
+
+  .cors-methods {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cors-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cors-field-grid label:last-child {
+    grid-column: auto;
+    max-width: none;
+  }
+
+  .cors-required-origin {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .cors-required-origin strong {
+    grid-column: 2;
   }
 
   .modal-layer {

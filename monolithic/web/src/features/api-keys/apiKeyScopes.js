@@ -5,6 +5,7 @@ export const apiKeyScopes = [
   ['spaces:write', 'Create, edit, and delete spaces'],
   ['storage:read', 'Read bucket usage and policy'],
   ['policy:write', 'Change bucket visibility'],
+  ['cors:write', 'Change bucket browser origins'],
 ]
 
 export const allApiKeyScopes = apiKeyScopes.map(([scope]) => scope)

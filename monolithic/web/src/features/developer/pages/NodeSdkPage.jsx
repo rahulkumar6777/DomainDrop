@@ -40,6 +40,7 @@ const sdkMethods = [
   ['files.delete(fileId)', 'Delete metadata and object'],
   ['storage.get()', 'Read bucket, policy, usage, and quota'],
   ['storage.setVisibility(value)', 'Apply private or public-read bucket policy'],
+  ['storage.setCors(configuration)', 'Apply custom bucket CORS rules'],
 ]
 
 function NodeSdkPage() {

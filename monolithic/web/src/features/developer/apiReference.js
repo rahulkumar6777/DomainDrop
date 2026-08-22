@@ -133,18 +133,24 @@ export const apiReference = {
   storage: {
     eyebrow: 'API reference',
     title: 'Storage',
-    copy: 'Inspect the one user bucket, quota counters, and bucket-wide delivery policy.',
+    copy: 'Inspect the one user bucket, quota counters, delivery policy, and browser access rules.',
     endpoints: [
       {
         method: 'GET', path: '/api/v1/storage', scope: 'storage:read', summary: 'Get storage state',
-        description: 'Returns bucket identity, desired/applied policy, usage, quota, and provisioning status.',
-        response: json({ success: true, storage: { bucket: { name: 'dd-user-...', provider: 'minio' }, policy: { visibility: 'private', appliedVisibility: 'private', status: 'applied' }, usage: { objects: 12, bytes: 829301 }, quota: { maxBytes: 1073741824, maxObjects: 200, maxFileSize: 104857600 }, status: 'active' } }),
+        description: 'Returns bucket identity, policy, CORS state, usage, quota, and provisioning status.',
+        response: json({ success: true, storage: { bucket: { name: 'dd-user-...', provider: 'minio' }, policy: { visibility: 'private', appliedVisibility: 'private', status: 'applied' }, cors: { defaultOrigin: 'https://app.domaindrop.cloud', configuration: { allowedOrigins: ['https://app.example.com'], allowedMethods: ['GET', 'HEAD', 'PUT'], allowedHeaders: ['*'], exposeHeaders: ['ETag'], maxAgeSeconds: 3600 }, status: 'applied' }, usage: { objects: 12, bytes: 829301 }, quota: { maxBytes: 1073741824, maxObjects: 200, maxFileSize: 104857600 }, status: 'active' } }),
       },
       {
         method: 'PATCH', path: '/api/v1/storage/policy', scope: 'policy:write', summary: 'Update bucket visibility',
         description: 'Applies private or public-read to the whole MinIO bucket. Every space and file inherits it.',
         request: json({ visibility: 'public-read' }),
         response: json({ success: true, policy: { visibility: 'public-read', appliedVisibility: 'public-read', status: 'applied', appliedAt: '2026-08-20T10:20:00.000Z' } }),
+      },
+      {
+        method: 'PUT', path: '/api/v1/storage/cors', scope: 'cors:write', summary: 'Replace custom CORS rules',
+        description: 'Applies these origins to the user bucket. The DomainDrop dashboard origin remains present automatically.',
+        request: json({ allowedOrigins: ['https://app.example.com', 'https://*.preview.example.com'], allowedMethods: ['GET', 'HEAD', 'PUT'], allowedHeaders: ['*'], exposeHeaders: ['ETag'], maxAgeSeconds: 3600 }),
+        response: json({ success: true, cors: { defaultOrigin: 'https://app.domaindrop.cloud', configuration: { allowedOrigins: ['https://app.example.com', 'https://*.preview.example.com'], allowedMethods: ['GET', 'HEAD', 'PUT'], allowedHeaders: ['*'], exposeHeaders: ['ETag'], maxAgeSeconds: 3600 }, appliedConfiguration: { allowedOrigins: ['https://app.example.com', 'https://*.preview.example.com'], allowedMethods: ['GET', 'HEAD', 'PUT'], allowedHeaders: ['*'], exposeHeaders: ['ETag'], maxAgeSeconds: 3600 }, status: 'applied', appliedAt: '2026-08-20T10:20:00.000Z' } }),
       },
     ],
   },

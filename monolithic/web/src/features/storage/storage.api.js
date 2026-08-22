@@ -4,4 +4,8 @@ export const storageApi = {
     method: 'PATCH',
     body: { visibility },
   }),
+  updateCors: (call, configuration) => call('/v1/storage/cors', {
+    method: 'PUT',
+    body: configuration,
+  }),
 }
