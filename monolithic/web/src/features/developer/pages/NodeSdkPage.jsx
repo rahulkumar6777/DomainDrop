@@ -26,6 +26,18 @@ const upload = [
   '})',
 ].join('\n')
 
+const configureCors = [
+  'const cors = await drop.storage.setCors({',
+  "  allowedOrigins: ['https://app.example.com'],",
+  "  allowedMethods: ['GET', 'HEAD', 'PUT'],",
+  "  allowedHeaders: ['*'],",
+  "  exposeHeaders: ['ETag'],",
+  '  maxAgeSeconds: 3600,',
+  '})',
+  '',
+  'console.log(cors.defaultOrigin)',
+].join('\n')
+
 const sdkMethods = [
   ['spaces.list()', 'List all spaces'],
   ['spaces.get(spaceId)', 'Get one space'],
@@ -65,6 +77,13 @@ function NodeSdkPage() {
         <h2>One method for small and large files.</h2>
         <p>The package reads paths lazily, requests signed part URLs in batches, uploads with bounded concurrency, and completes with ordered ETags.</p>
         <CodeBlock code={upload} language="javascript" title="upload.mjs" />
+      </section>
+
+      <section className="docs-section-block">
+        <p className="docs-kicker">Browser access</p>
+        <h2>Set custom bucket origins.</h2>
+        <p>These origins are added beside DomainDrop's required dashboard origin. CORS does not change private or public-read delivery policy.</p>
+        <CodeBlock code={configureCors} language="javascript" title="cors.mjs" />
       </section>
 
       <section className="docs-section-block">
