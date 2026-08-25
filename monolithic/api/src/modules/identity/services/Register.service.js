@@ -9,6 +9,8 @@ import { createBucket } from '../../../utils/minio/createBucket.js';
 import { plans } from '../../../constant/plan.js';
 import { generateBucketName } from '../../../utils/storage/generateBucketName.js';
 import { envs } from '../../../lib/env.js';
+import { welcomeQueue } from '../../../utils/queues/queue.js';
+import { QUEUE_NAMES } from '../../../utils/queues/queueNames.js';
 
 
 export const initRegisterService = async (req) => {
@@ -198,6 +200,12 @@ export const verifyRegisterService = async (req) => {
             throw new Error('Unable to activate provisioned account');
         }
 
+
+        await welcomeQueue.add(QUEUE_NAMES.WELCOME, {
+            name: userData.fullName,
+            email: userData.email
+        })
+
         await redis.del(redisKey);
     } catch (error) {
         await User.updateOne(
@@ -209,6 +217,8 @@ export const verifyRegisterService = async (req) => {
                 }
             }
         );
+
+        console.log(error)
 
         throw new AppError('Account setup failed. Please try again', 503);
     }
