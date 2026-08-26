@@ -30,14 +30,12 @@ const startServer = async () => {
     await connectDb();
     await connectRedis();
     startExpiredUploadsWorker();
-
+    await import("./workers/index.js")
 
 
     app.listen(envs.PORT, () => {
         console.log(`Server is running on port ${envs.PORT} in ${envs.NODE_ENV} mode`);
     });
-
-    await import("./workers/index.js")
 };
 
 startServer();
