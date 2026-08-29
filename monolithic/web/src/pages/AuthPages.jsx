@@ -16,22 +16,33 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useAuth } from '../hooks/useAuth.js'
 import { authApi } from '../lib/api.js'
 
-function PasswordInput({ value, onChange, autoComplete = 'current-password' }) {
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/
+
+function PasswordInput({
+  id = 'password',
+  name = 'password',
+  value,
+  onChange,
+  autoComplete = 'current-password',
+  placeholder = 'Your password',
+  autoFocus = false,
+}) {
   const [isVisible, setIsVisible] = useState(false)
 
   return (
     <div className="input-with-action">
       <LockKeyhole size={18} aria-hidden="true" />
       <input
-        id="password"
-        name="password"
+        id={id}
+        name={name}
         type={isVisible ? 'text' : 'password'}
         value={value}
         onChange={onChange}
         autoComplete={autoComplete}
+        autoFocus={autoFocus}
         minLength={8}
         maxLength={30}
-        placeholder="Your password"
+        placeholder={placeholder}
         required
       />
       <button
@@ -52,7 +63,7 @@ function AuthLayout({ eyebrow, title, copy, children }) {
       <div className="shell auth-layout">
         <div className="auth-aside">
           <p className="eyebrow">DomainDrop account</p>
-          <h1>One secure home for every userâ€™s files.</h1>
+          <h1>One secure home for every user's files.</h1>
           <div className="auth-aside-points">
             <span><ShieldCheck size={18} /> Private by default</span>
             <span><KeyRound size={18} /> Rotating refresh sessions</span>
@@ -84,6 +95,7 @@ function LoginPage() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const wasRegistered = searchParams.get('registered') === '1'
+  const wasPasswordReset = searchParams.get('passwordReset') === '1'
 
   const updateField = (event) => {
     setForm((current) => ({
@@ -119,6 +131,12 @@ function LoginPage() {
           Registration verified. You can log in now.
         </div>
       )}
+      {wasPasswordReset && (
+        <div className="form-success" role="status">
+          <CheckCircle2 size={18} />
+          Password updated. Log in with your new password.
+        </div>
+      )}
       {error && <div className="form-error" role="alert">{error}</div>}
       <form className="auth-form" onSubmit={handleSubmit}>
         <label htmlFor="email">Email address</label>
@@ -138,9 +156,14 @@ function LoginPage() {
 
         <div className="label-row">
           <label htmlFor="password">Password</label>
-          <button className="quiet-action" type="button" disabled>
-            Forgot password
-          </button>
+          <Link
+            className="quiet-action"
+            to={form.email
+              ? `/forgot-password?email=${encodeURIComponent(form.email)}`
+              : '/forgot-password'}
+          >
+            Forgot password?
+          </Link>
         </div>
         <PasswordInput value={form.password} onChange={updateField} />
 
@@ -330,7 +353,7 @@ function SignupPage() {
           autoComplete="new-password"
         />
         <p className="field-hint">
-          8â€“30 characters with uppercase, lowercase, number, and special character.
+          8-30 characters with uppercase, lowercase, number, and special character.
         </p>
 
         <button
@@ -358,4 +381,256 @@ function SignupPage() {
   )
 }
 
-export { LoginPage, SignupPage }
+function ForgotPasswordPage() {
+  const [searchParams] = useSearchParams()
+  const [email, setEmail] = useState(searchParams.get('email') || '')
+  const [sentTo, setSentTo] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      await authApi.requestPasswordReset({ email })
+      setSentTo(email)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (sentTo) {
+    return (
+      <AuthLayout
+        eyebrow="Check your inbox"
+        title="Reset link sent"
+        copy={`We sent a password reset link to ${sentTo}. It will expire in 15 minutes.`}
+      >
+        <div className="form-success" role="status">
+          <CheckCircle2 size={18} />
+          Open the link in the email to choose a new password.
+        </div>
+        <div className="auth-form auth-result-actions">
+          <Link
+            className="button button-dark button-full"
+            to={`/login?email=${encodeURIComponent(sentTo)}`}
+          >
+            Back to login
+            <ArrowRight size={18} />
+          </Link>
+          <button
+            className="back-action"
+            type="button"
+            onClick={() => {
+              setError('')
+              setSentTo('')
+            }}
+          >
+            <ArrowLeft size={16} />
+            Use a different email
+          </button>
+        </div>
+      </AuthLayout>
+    )
+  }
+
+  return (
+    <AuthLayout
+      eyebrow="Account recovery"
+      title="Reset your password"
+      copy="Enter the email connected to your DomainDrop account. We will send you a secure reset link."
+    >
+      {error && <div className="form-error" role="alert">{error}</div>}
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label htmlFor="reset-email">Email address</label>
+        <div className="input-with-icon">
+          <Mail size={18} aria-hidden="true" />
+          <input
+            id="reset-email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            maxLength={100}
+            placeholder="you@company.com"
+            autoFocus
+            required
+          />
+        </div>
+        <button
+          className="button button-dark button-full"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <LoaderCircle className="spin" size={18} />
+              Sending reset link
+            </>
+          ) : (
+            <>
+              Send reset link
+              <ArrowRight size={18} />
+            </>
+          )}
+        </button>
+        <Link className="back-action" to="/login">
+          <ArrowLeft size={16} />
+          Back to login
+        </Link>
+      </form>
+    </AuthLayout>
+  )
+}
+
+function ResetPasswordPage() {
+  const [searchParams] = useSearchParams()
+  const { logout } = useAuth()
+  const token = searchParams.get('token')?.trim() || ''
+  const [form, setForm] = useState({ password: '', confirmPassword: '' })
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isComplete, setIsComplete] = useState(false)
+
+  const updateField = (event) => {
+    setForm((current) => ({
+      ...current,
+      [event.target.name]: event.target.value,
+    }))
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
+    if (!PASSWORD_PATTERN.test(form.password)) {
+      setError('Use 8-30 characters with uppercase, lowercase, number, and special character.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await authApi.resetPassword({ token, password: form.password })
+      await logout().catch(() => undefined)
+      setIsComplete(true)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (!token) {
+    return (
+      <AuthLayout
+        eyebrow="Invalid reset link"
+        title="This link cannot be used"
+        copy="The password reset token is missing. Request a new link and open it directly from your email."
+      >
+        <div className="form-error" role="alert">
+          This password reset link is incomplete.
+        </div>
+        <div className="auth-form auth-result-actions">
+          <Link className="button button-dark button-full" to="/forgot-password">
+            Request a new link
+            <ArrowRight size={18} />
+          </Link>
+          <Link className="back-action" to="/login">
+            <ArrowLeft size={16} />
+            Back to login
+          </Link>
+        </div>
+      </AuthLayout>
+    )
+  }
+
+  if (isComplete) {
+    return (
+      <AuthLayout
+        eyebrow="Password updated"
+        title="Your account is secure"
+        copy="Your password has been changed and all existing DomainDrop sessions have been signed out."
+      >
+        <div className="form-success" role="status">
+          <CheckCircle2 size={18} />
+          Use your new password the next time you log in.
+        </div>
+        <div className="auth-form auth-result-actions">
+          <Link className="button button-dark button-full" to="/login?passwordReset=1">
+            Log in with new password
+            <ArrowRight size={18} />
+          </Link>
+        </div>
+      </AuthLayout>
+    )
+  }
+
+  return (
+    <AuthLayout
+      eyebrow="Choose a new password"
+      title="Create a new password"
+      copy="Use a strong password that you have not used for this account before."
+    >
+      {error && <div className="form-error" role="alert">{error}</div>}
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label htmlFor="new-password">New password</label>
+        <PasswordInput
+          id="new-password"
+          name="password"
+          value={form.password}
+          onChange={updateField}
+          autoComplete="new-password"
+          placeholder="New password"
+          autoFocus
+        />
+
+        <label htmlFor="confirm-password">Confirm new password</label>
+        <PasswordInput
+          id="confirm-password"
+          name="confirmPassword"
+          value={form.confirmPassword}
+          onChange={updateField}
+          autoComplete="new-password"
+          placeholder="Repeat new password"
+        />
+        <p className="field-hint">
+          8-30 characters with uppercase, lowercase, number, and special character.
+        </p>
+
+        <button
+          className="button button-dark button-full"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <LoaderCircle className="spin" size={18} />
+              Updating password
+            </>
+          ) : (
+            <>
+              Update password
+              <ArrowRight size={18} />
+            </>
+          )}
+        </button>
+      </form>
+      <p className="auth-switch">
+        Need another link? <Link to="/forgot-password">Request a new one</Link>
+      </p>
+    </AuthLayout>
+  )
+}
+
+export { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage }

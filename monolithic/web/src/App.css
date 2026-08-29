@@ -1456,10 +1456,16 @@
 
 .quiet-action {
   padding: 0;
-  color: #9aa5a1;
+  color: var(--cyan);
   background: transparent;
   border: 0;
   font-size: 11px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.quiet-action:hover {
+  text-decoration: underline;
 }
 
 .input-with-icon,
@@ -1588,6 +1594,7 @@
   border: 0;
   font-size: 12px;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .spin {

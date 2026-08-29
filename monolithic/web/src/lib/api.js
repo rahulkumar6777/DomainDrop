@@ -63,6 +63,20 @@ export const authApi = {
     })
   },
 
+  async requestPasswordReset(details) {
+    return request('/v1/auth/forget-password/init', {
+      method: 'POST',
+      body: details,
+    })
+  },
+
+  async resetPassword(details) {
+    return request('/v1/auth/forget-password/verify', {
+      method: 'POST',
+      body: details,
+    })
+  },
+
   async refresh() {
     const payload = await request('/v1/auth/refresh-token')
     return { ...payload, accessToken: getAccessToken(payload) }

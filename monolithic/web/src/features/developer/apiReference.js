@@ -48,6 +48,18 @@ export const apiReference = {
         description: 'Revokes the current Redis session and clears the refresh cookie.',
         response: json({ success: true, message: 'Logged out successfully' }),
       },
+      {
+        method: 'POST', path: '/api/v1/auth/forget-password/init', auth: 'Public', summary: 'Request a password reset',
+        description: 'Creates a one-time reset token, stores its hash in Redis for 15 minutes, and emails the frontend reset link.',
+        request: json({ email: 'rahul@example.com' }),
+        response: json({ message: 'Reset Link sent to your email' }),
+      },
+      {
+        method: 'POST', path: '/api/v1/auth/forget-password/verify', auth: 'Public', summary: 'Set a new password',
+        description: 'Consumes the one-time token, updates the password, and revokes all existing sessions for the account.',
+        request: json({ token: '<TOKEN_FROM_EMAIL_LINK>', password: 'NewStrong@123' }),
+        response: json({ message: 'Password reset SuccessFully and your all sessions are logout' }),
+      },
     ],
   },
   spaces: {

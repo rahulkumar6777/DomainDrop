@@ -19,7 +19,12 @@ import LanguageExamplePage from './features/developer/pages/LanguageExamplePage.
 import NodeSdkPage from './features/developer/pages/NodeSdkPage.jsx'
 import QuickstartPage from './features/developer/pages/QuickstartPage.jsx'
 import UploadGuidePage from './features/developer/pages/UploadGuidePage.jsx'
-import { LoginPage, SignupPage } from './pages/AuthPages.jsx'
+import {
+  ForgotPasswordPage,
+  LoginPage,
+  ResetPasswordPage,
+  SignupPage,
+} from './pages/AuthPages.jsx'
 import ApiKeysPage from './features/api-keys/ApiKeysPage.jsx'
 import FilesPage from './features/files/FilesPage.jsx'
 import OverviewPage from './features/overview/OverviewPage.jsx'
@@ -90,6 +95,8 @@ function App() {
                 </GuestOnlyRoute>
               }
             />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
             <Route
               path="signup"
               element={
