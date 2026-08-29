@@ -5,6 +5,7 @@ import { hashApiKey } from '../utils/generateApikey.js';
 import { cacheApiKey, getCachedApiKey } from '../utils/cache/apiKeyCache.js';
 import { getRedisClient } from '../config/redis/redis.js';
 import { ApiKey } from '../models/apikeys.model.js';
+import { cacheKey } from '../utils/cache/cacheKey.js';
 
 
 const API_KEY_PATTERN = /^dd_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$/;
@@ -29,24 +30,37 @@ export const authReq = async (req, res, next) => {
     const { type, value } = credential;
 
     if (type === "jwt") {
+        let decoded;
         try {
-            const decoded = jwt.verify(value, envs.ACCESS_TOKEN_SECRET);
-            if (!decoded?._id) {
-                return sendError(res, 401, "Invalid access token");
-            }
-
-            req.user = decoded;
-            req.auth = {
-                type: "jwt",
-                userId: String(decoded._id),
-                tokenId: decoded.jti ?? null,
-                scopes: ["*"],
-            };
-
-            return next();
+            decoded = jwt.verify(value, envs.ACCESS_TOKEN_SECRET);
         } catch (_error) {
             return sendError(res, 401, "Invalid or expired access token");
         }
+
+        if (!decoded?._id || !decoded.jti) {
+            return sendError(res, 401, "Invalid access token");
+        }
+
+        try {
+            const sessionExists = await getRedisClient().exists(
+                cacheKey.SessionKey(decoded._id, decoded.jti),
+            );
+            if (!sessionExists) {
+                return sendError(res, 401, "Session expired or revoked");
+            }
+        } catch (error) {
+            return next(error);
+        }
+
+        req.user = decoded;
+        req.auth = {
+            type: "jwt",
+            userId: String(decoded._id),
+            tokenId: decoded.jti,
+            scopes: ["*"],
+        };
+
+        return next();
     }
 
     if (type === "api-key") {

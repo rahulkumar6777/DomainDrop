@@ -40,7 +40,7 @@ const getSessionKeys = async (redis, userId) => {
         sessionKeys.push(...keys);
     } while (cursor !== '0');
 
-    return sessionKeys;
+    return [...new Set(sessionKeys)];
 };
 
 const enforceSessionLimit = async (redis, userId, maxSessions = MAX_SESSIONS_PER_USER, protectedSessionKeys = []) => {
@@ -146,6 +146,101 @@ const deleteAllSessions = async (redis, userId) => {
     }
 };
 
+const getTokenIdFromSessionKey = (userId, sessionKey) => {
+    const prefix = createSessionKey(userId, '');
+    return sessionKey.startsWith(prefix) ? sessionKey.slice(prefix.length) : null;
+};
+
+const toIsoDate = (value) => {
+    const timestamp = Number(value);
+    return Number.isFinite(timestamp) && timestamp > 0 ? new Date(timestamp).toISOString() : null;
+};
+
+const listAllSessions = async (redis, userId, currentTokenId = null) => {
+    const sessionKeys = await getSessionKeys(redis, userId);
+    if (sessionKeys.length === 0) {
+        return [];
+    }
+
+    const [sessionValues, sessionTtls] = await Promise.all([
+        redis.mget(...sessionKeys),
+        Promise.all(sessionKeys.map((key) => redis.pttl(key))),
+    ]);
+    const now = Date.now();
+
+    return sessionValues
+        .map((value, index) => {
+            if (!value) {
+                return null;
+            }
+
+            let session;
+            try {
+                session = JSON.parse(value);
+            } catch (_error) {
+                return null;
+            }
+
+            const tokenId = getTokenIdFromSessionKey(userId, sessionKeys[index]);
+            if (!tokenId) {
+                return null;
+            }
+
+            const ttl = Number(sessionTtls[index]);
+            const lastActiveAt = toIsoDate(session.rotatedAt) || toIsoDate(session.createdAt);
+
+            return {
+                id: tokenId,
+                device: session.device || extractDevice(session.userAgent),
+                ip: session.ip || null,
+                userAgent: session.userAgent || null,
+                createdAt: toIsoDate(session.createdAt),
+                lastActiveAt,
+                expiresAt: ttl > 0 ? new Date(now + ttl).toISOString() : null,
+                isCurrent: tokenId === currentTokenId,
+            };
+        })
+        .filter(Boolean)
+        .sort((firstSession, secondSession) => {
+            if (firstSession.isCurrent !== secondSession.isCurrent) {
+                return firstSession.isCurrent ? -1 : 1;
+            }
+
+            return new Date(secondSession.lastActiveAt || 0) - new Date(firstSession.lastActiveAt || 0);
+        });
+};
+
+const revokeSession = async (redis, userId, tokenId) => {
+    const result = await redis
+        .multi()
+        .del(createSessionKey(userId, tokenId))
+        .del(cacheKey.RefreshLock(userId, tokenId))
+        .del(cacheKey.RefreshRotation(userId, tokenId))
+        .exec();
+
+    return Number(result?.[0]?.[1]) === 1;
+};
+
+const revokeOtherSessions = async (redis, userId, currentTokenId) => {
+    const sessionKeys = await getSessionKeys(redis, userId);
+    const sessionIds = sessionKeys
+        .map((key) => getTokenIdFromSessionKey(userId, key))
+        .filter((tokenId) => tokenId && tokenId !== currentTokenId);
+
+    if (sessionIds.length === 0) {
+        return 0;
+    }
+
+    const keysToDelete = sessionIds.flatMap((tokenId) => [
+        createSessionKey(userId, tokenId),
+        cacheKey.RefreshLock(userId, tokenId),
+        cacheKey.RefreshRotation(userId, tokenId),
+    ]);
+
+    await redis.del(...keysToDelete);
+    return sessionIds.length;
+};
+
 
 export {
     SESSION_TTL_SECONDS,
@@ -156,5 +251,8 @@ export {
     generateRefreshToken,
     generateAccessToken,
     generateToken,
-    deleteAllSessions
+    deleteAllSessions,
+    listAllSessions,
+    revokeSession,
+    revokeOtherSessions
 }

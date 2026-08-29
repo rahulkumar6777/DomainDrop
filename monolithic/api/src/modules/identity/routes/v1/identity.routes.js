@@ -9,6 +9,13 @@ import { changePasswordValidators } from '../../validators/changePassword.valida
 import { changePasswordController } from '../../controllers/changePassword.controller.js';
 import { forgetPasswordValidatorsInit, forgetPasswordValidatorsVerify } from '../../validators/forgetPassword.validators.js';
 import { forgetPasswordControllerInit, forgetPasswordControllerVerify } from '../../controllers/forgetPasswordController.js';
+import {
+    listSessionsController,
+    revokeOtherSessionsController,
+    revokeSessionController,
+} from '../../controllers/sessions.controller.js';
+import { authReq } from '../../../../middlewares/authReq.middleware.js';
+import { sessionIdValidator } from '../../validators/session.validator.js';
 
 
 const router = express.Router();
@@ -30,12 +37,16 @@ router.get('/refresh-token', refreshTokenController);
 router.post('/logout', logoutController);
 
 // changes password
-router.post("/change-password", changePasswordValidators, changePasswordController)
+router.post("/change-password", authReq, changePasswordValidators, changePasswordController)
 
 // reset password
 router.post("/forget-password/init", forgetPasswordValidatorsInit, forgetPasswordControllerInit);
 router.post("/forget-password/verify", forgetPasswordValidatorsVerify, forgetPasswordControllerVerify);
 
 
+// users sessions
+router.get("/sessions", authReq, listSessionsController);
+router.delete("/sessions/others", authReq, revokeOtherSessionsController);
+router.delete("/sessions/:sessionId", authReq, sessionIdValidator, revokeSessionController);
 
 export default router;
