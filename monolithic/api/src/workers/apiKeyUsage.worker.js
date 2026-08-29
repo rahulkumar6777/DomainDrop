@@ -120,7 +120,14 @@ const persistUsageBatch = async (events) => {
     );
 };
 
-const flushSnapshot = async (redis, snapshotKey, persistBatch) => {
+const invalidateUsageCache = async (redis, events) => {
+    const apiKeyIds = [...new Set(events.map((event) => event.apiKeyId))];
+    await Promise.all(
+        apiKeyIds.map((apiKeyId) => redis.incr(cacheKey.ApiKeyUsageVersion(apiKeyId))),
+    );
+};
+
+const flushSnapshot = async (redis, snapshotKey, persistBatch, invalidateCache) => {
     let flushedEvents = 0;
 
     while (true) {
@@ -132,6 +139,7 @@ const flushSnapshot = async (redis, snapshotKey, persistBatch) => {
 
         const events = bufferedValues.map(parseUsage).filter(Boolean);
         await persistBatch(events);
+        await invalidateCache(redis, events);
         await redis.ltrim(snapshotKey, bufferedValues.length, -1);
         flushedEvents += events.length;
     }
@@ -154,6 +162,7 @@ const claimPendingSnapshot = async (redis) => {
 export const flushApiKeyUsage = async ({
     redis = getRedisClient(),
     persistBatch = persistUsageBatch,
+    invalidateCache = invalidateUsageCache,
 } = {}) => {
     if (flushRunning) {
         return 0;
@@ -183,12 +192,12 @@ export const flushApiKeyUsage = async ({
         );
 
         for (const snapshotKey of abandonedSnapshots) {
-            flushedEvents += await flushSnapshot(redis, snapshotKey, persistBatch);
+            flushedEvents += await flushSnapshot(redis, snapshotKey, persistBatch, invalidateCache);
         }
 
         const pendingSnapshot = await claimPendingSnapshot(redis);
         if (pendingSnapshot) {
-            flushedEvents += await flushSnapshot(redis, pendingSnapshot, persistBatch);
+            flushedEvents += await flushSnapshot(redis, pendingSnapshot, persistBatch, invalidateCache);
         }
 
         return flushedEvents;

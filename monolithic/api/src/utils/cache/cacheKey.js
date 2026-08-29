@@ -8,5 +8,8 @@ export const cacheKey = {
     ApiKeyUsagePending: () => "domaindrop:apikeys:usage:pending",
     ApiKeyUsageProcessing: (snapshotId) => `domaindrop:apikeys:usage:processing:${snapshotId}`,
     ApiKeyUsageProcessingPattern: () => "domaindrop:apikeys:usage:processing:*",
-    ApiKeyUsageFlushLock: () => "domaindrop:apikeys:usage:flush-lock"
+    ApiKeyUsageFlushLock: () => "domaindrop:apikeys:usage:flush-lock",
+    ApiKeyUsageVersion: (apiKeyId) => `domaindrop:apikeys:${apiKeyId}:usage:version`,
+    ApiKeyUsageQuery: (userId, apiKeyId, version, queryHash) =>
+        `domaindrop:users:${userId}:apikeys:${apiKeyId}:usage:${version}:${queryHash}`,
 }   
