@@ -7,6 +7,8 @@ import { refreshTokenController } from '../../controllers/refreshToken.controlle
 import { logoutController } from '../../controllers/logout.controller.js';
 import { changePasswordValidators } from '../../validators/changePassword.validator.js';
 import { changePasswordController } from '../../controllers/changePassword.controller.js';
+import { forgetPasswordValidatorsInit } from '../../validators/forgetPassword.validators.js';
+import { forgetPasswordControllerInit } from '../../controllers/forgetPasswordController.js';
 
 
 const router = express.Router();
@@ -23,8 +25,16 @@ router.post('/login', loginValidator, loginController);
 
 // refresh token
 router.get('/refresh-token', refreshTokenController);
+
+// logout
 router.post('/logout', logoutController);
+
+// changes password
 router.post("/change-password", changePasswordValidators, changePasswordController)
+
+// reset password
+router.post("/forget-password/init", forgetPasswordValidatorsInit, forgetPasswordControllerInit);
+
 
 
 export default router;
