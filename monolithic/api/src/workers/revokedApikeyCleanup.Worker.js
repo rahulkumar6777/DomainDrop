@@ -102,5 +102,5 @@ export const cleanupRevokedApiKeys = async () => {
     }
 };
 
-// this job runs every minute
-cron.schedule("* * * * *", cleanupRevokedApiKeys);
+// this job runs every hours
+cron.schedule("0 * * * *", cleanupRevokedApiKeys);
