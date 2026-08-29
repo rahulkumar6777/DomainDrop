@@ -4,6 +4,7 @@ import { envs } from "../../../lib/env.js";
 import { cacheKey } from "../../../utils/cache/cacheKey.js";
 import { AppError } from "../../../utils/errors/AppError.js";
 import { transporter } from "../../../utils/mail/transporter.js";
+import { deleteAllSessions } from "../../../utils/security/generateToken.js";
 import { User } from "../models/user.Model.js";
 import crypto from 'crypto';
 
@@ -34,4 +35,32 @@ export const forgetPasswordServiceInit = async (req) => {
         subject: `Reset Password Link`,
         html: passwordResetEmailTemplate({ resetUrl: resetLink })
     });
+}
+
+
+export const forgetPasswordServiceVerify = async (req) => {
+
+    const { token, password } = req.body;
+
+    const redis = getRedisClient();
+
+    const hashToken = crypto.createHash("sha256").update(token).digest("hex");
+    const redisKey = cacheKey.ResetPassword(hashToken);
+
+    const cacheDataUserId = await redis.get(redisKey);
+    if (!cacheDataUserId) {
+        throw new AppError("Invalid or Expired token, please generate a new Reset link", 400)
+    }
+
+    const user = await User.findById(cacheDataUserId);
+    user.password = password;
+    await user.save();
+
+    if (!user) {
+        throw new AppError("User not Found", 404)
+    }
+
+    await redis.del(redisKey);
+
+    await deleteAllSessions(redis, user._id)
 }
