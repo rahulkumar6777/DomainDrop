@@ -10,6 +10,6 @@ export const cacheKey = {
     ApiKeyUsageProcessingPattern: () => "domaindrop:apikeys:usage:processing:*",
     ApiKeyUsageFlushLock: () => "domaindrop:apikeys:usage:flush-lock",
     ApiKeyUsageVersion: (apiKeyId) => `domaindrop:apikeys:${apiKeyId}:usage:version`,
-    ApiKeyUsageQuery: (userId, apiKeyId, version, queryHash) =>
-        `domaindrop:users:${userId}:apikeys:${apiKeyId}:usage:${version}:${queryHash}`,
+    ApiKeyUsageQuery: (userId, apiKeyId, version, queryHash) => `domaindrop:users:${userId}:apikeys:${apiKeyId}:usage:${version}:${queryHash}`,
+    ApiKeyUsageQueryPattern: (userId, apiKeyId) => `domaindrop:users:${userId}:apikeys:${apiKeyId}:usage:*`,
 }   
