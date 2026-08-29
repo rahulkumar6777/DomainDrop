@@ -4,6 +4,7 @@ import app from "./server.js";
 import { envs } from "./lib/env.js";
 import { returnError } from "./utils/errors/sendError.js";
 import { startExpiredUploadsWorker } from "./workers/expiredUploads.worker.js";
+import { startApiKeyUsageWorker } from "./workers/apiKeyUsage.worker.js";
 
 
 //health route
@@ -30,6 +31,7 @@ const startServer = async () => {
     await connectDb();
     await connectRedis();
     startExpiredUploadsWorker();
+    startApiKeyUsageWorker();
     await import("./workers/index.js")
 
 

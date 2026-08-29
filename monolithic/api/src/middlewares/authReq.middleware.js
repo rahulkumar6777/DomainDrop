@@ -6,6 +6,7 @@ import { cacheApiKey, getCachedApiKey } from '../utils/cache/apiKeyCache.js';
 import { getRedisClient } from '../config/redis/redis.js';
 import { ApiKey } from '../models/apikeys.model.js';
 import { cacheKey } from '../utils/cache/cacheKey.js';
+import { captureApiKeyUsage } from '../utils/usage/apiKeyUsage.js';
 
 
 const API_KEY_PATTERN = /^dd_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$/;
@@ -19,6 +20,7 @@ const isExpired = (expiresAt) => Boolean(expiresAt) && new Date(expiresAt).getTi
 
 
 export const authReq = async (req, res, next) => {
+    const startedAt = process.hrtime.bigint();
     let credential;
 
     try {
@@ -96,10 +98,6 @@ export const authReq = async (req, res, next) => {
                     }
                 }
 
-                try {
-                    await ApiKey.updateOne({ _id: apiKey._id }, { $set: { lastUsedAt: new Date() } });
-                } catch (_error) {
-                }
             }
 
             if (apiKey.status !== "active" || isExpired(apiKey.expiresAt)) {
@@ -115,6 +113,8 @@ export const authReq = async (req, res, next) => {
                 keyPrefix: apiKey.keyPrefix,
                 scopes: [...apiKey.scopes],
             };
+
+            captureApiKeyUsage(req, res, req.auth, startedAt);
 
             return next();
         } catch (error) {
