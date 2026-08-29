@@ -96,6 +96,7 @@ function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const wasRegistered = searchParams.get('registered') === '1'
   const wasPasswordReset = searchParams.get('passwordReset') === '1'
+  const wasSessionRevoked = searchParams.get('sessionRevoked') === '1'
 
   const updateField = (event) => {
     setForm((current) => ({
@@ -135,6 +136,12 @@ function LoginPage() {
         <div className="form-success" role="status">
           <CheckCircle2 size={18} />
           Password updated. Log in with your new password.
+        </div>
+      )}
+      {wasSessionRevoked && (
+        <div className="form-success" role="status">
+          <CheckCircle2 size={18} />
+          Session signed out. Log in again to continue.
         </div>
       )}
       {error && <div className="form-error" role="alert">{error}</div>}

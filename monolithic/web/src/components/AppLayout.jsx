@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MonitorSmartphone,
   Settings,
   X,
 } from 'lucide-react'
@@ -24,6 +25,7 @@ const appNavigation = [
     ],
   },
   { label: 'Developer', items: [{ label: 'API keys', to: '/app/developer/api-keys', icon: KeyRound }] },
+  { label: 'Account', items: [{ label: 'Sessions', to: '/app/settings/sessions', icon: MonitorSmartphone }] },
   { label: 'Configuration', items: [{ label: 'Bucket settings', to: '/app/settings/bucket', icon: Settings }] },
 ]
 
@@ -32,6 +34,7 @@ const routeTitles = {
   '/app/storage/files': 'Files',
   '/app/storage/spaces': 'Spaces',
   '/app/developer/api-keys': 'API keys',
+  '/app/settings/sessions': 'Active sessions',
   '/app/settings/bucket': 'Bucket settings',
 }
 

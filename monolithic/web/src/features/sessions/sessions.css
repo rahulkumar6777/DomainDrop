@@ -1,0 +1,123 @@
+.session-list {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.session-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.session-device-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  background: var(--cyan-soft);
+  border-radius: 7px;
+}
+
+.session-main {
+  min-width: 0;
+}
+
+.session-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.session-title-row h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.session-current {
+  padding: 4px 7px;
+  color: var(--green);
+  background: var(--green-soft);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.session-agent {
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.session-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 16px;
+  margin: 20px 0 0;
+}
+
+.session-meta div {
+  min-width: 0;
+}
+
+.session-meta dt {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.session-meta dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.session-revoke {
+  align-self: center;
+}
+
+.session-footnote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.session-footnote svg {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+  .session-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .session-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .session-revoke {
+    width: 100%;
+    grid-column: 1 / -1;
+  }
+
+  .session-meta {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

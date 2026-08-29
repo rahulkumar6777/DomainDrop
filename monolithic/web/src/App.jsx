@@ -30,6 +30,7 @@ import FilesPage from './features/files/FilesPage.jsx'
 import OverviewPage from './features/overview/OverviewPage.jsx'
 import SpacesPage from './features/spaces/SpacesPage.jsx'
 import SettingsPage from './features/storage/SettingsPage.jsx'
+import SessionsPage from './features/sessions/SessionsPage.jsx'
 import './App.css'
 
 function GuestOnlyRoute({ children }) {
@@ -113,10 +114,12 @@ function App() {
               <Route path="storage/files" element={<FilesPage />} />
               <Route path="storage/spaces" element={<SpacesPage />} />
               <Route path="developer/api-keys" element={<ApiKeysPage />} />
+              <Route path="settings/sessions" element={<SessionsPage />} />
               <Route path="settings/bucket" element={<SettingsPage />} />
               <Route path="files" element={<Navigate to="/app/storage/files" replace />} />
               <Route path="spaces" element={<Navigate to="/app/storage/spaces" replace />} />
               <Route path="api-keys" element={<Navigate to="/app/developer/api-keys" replace />} />
+              <Route path="sessions" element={<Navigate to="/app/settings/sessions" replace />} />
               <Route path="settings" element={<Navigate to="/app/settings/bucket" replace />} />
               <Route path="*" element={<Navigate to="/app" replace />} />
             </Route>

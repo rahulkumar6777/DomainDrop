@@ -49,6 +49,21 @@ export const apiReference = {
         response: json({ success: true, message: 'Logged out successfully' }),
       },
       {
+        method: 'GET', path: '/api/v1/auth/sessions', auth: 'Bearer session only', summary: 'List active sessions',
+        description: 'Returns safe device metadata for active Redis sessions. The current access-token session is marked explicitly.',
+        response: json({ success: true, sessions: [{ id: 'a02ef44b-34c8-4e80-970f-80bb22f6be44', device: 'Windows PC', ip: '203.0.113.10', userAgent: 'Mozilla/5.0 ...', createdAt: '2026-08-30T10:00:00.000Z', lastActiveAt: '2026-08-30T10:30:00.000Z', expiresAt: '2026-09-06T10:30:00.000Z', isCurrent: true }] }),
+      },
+      {
+        method: 'DELETE', path: '/api/v1/auth/sessions/others', auth: 'Bearer session only', summary: 'Revoke other sessions',
+        description: 'Immediately revokes every session owned by the account except the session making this request.',
+        response: json({ success: true, message: 'Other sessions revoked', revokedSessions: 1 }),
+      },
+      {
+        method: 'DELETE', path: '/api/v1/auth/sessions/:sessionId', auth: 'Bearer session only', summary: 'Revoke one session',
+        description: 'Revokes one owned UUID session. Revoking the current session also clears its refresh cookie.',
+        response: json({ success: true, message: 'Session revoked', sessionId: 'a02ef44b-34c8-4e80-970f-80bb22f6be44', currentSession: false }),
+      },
+      {
         method: 'POST', path: '/api/v1/auth/forget-password/init', auth: 'Public', summary: 'Request a password reset',
         description: 'Creates a one-time reset token, stores its hash in Redis for 15 minutes, and emails the frontend reset link.',
         request: json({ email: 'rahul@example.com' }),
