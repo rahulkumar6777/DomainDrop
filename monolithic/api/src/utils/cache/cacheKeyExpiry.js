@@ -1,4 +1,4 @@
 export const cacheKeyExpiry = {
     apikeyCacheExpiry: () => 5 * 60,
-    apiKeyUsageQueryExpiry: () => 30,
+    apiKeyUsageQueryExpiry: () => 5 * 60,
 }
