@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { KeyRound, Plus, ShieldCheck } from 'lucide-react'
+import { Activity, KeyRound, Plus, ShieldCheck } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import AppPageHeader from '../../components/app/AppPageHeader.jsx'
 import { ConfirmDialog } from '../../components/app/AppModal.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/app/AppStates.jsx'
@@ -103,7 +104,12 @@ function ApiKeysPage() {
                 <p>{key.scopes.join(' / ')}</p>
                 <small>Created {formatDate(key.createdAt)} | Last used {formatDate(key.lastUsedAt)} | Expires {formatDate(key.expiresAt, 'Never')}</small>
               </div>
-              {key.status === 'active' && <button className="button button-small button-outline danger-text" type="button" onClick={() => setPendingRevoke(key)}>Revoke</button>}
+              <div className="row-actions">
+                <Link className="button button-small button-outline" to={`${key.id}/usage`} state={{ apiKey: key }}>
+                  <Activity size={16} /> Usage
+                </Link>
+                {key.status === 'active' && <button className="button button-small button-outline danger-text" type="button" onClick={() => setPendingRevoke(key)}>Revoke</button>}
+              </div>
             </article>
           ))}
         </div>

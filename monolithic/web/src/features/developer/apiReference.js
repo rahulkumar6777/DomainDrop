@@ -198,6 +198,12 @@ export const apiReference = {
         response: json({ success: true, keys: [{ id: '66c4...b12', name: 'Production server', keyPrefix: 'dd_live_abcd...', status: 'active', scopes: ['files:read'] }] }),
       },
       {
+        method: 'GET', path: '/api/v1/api-keys/:apiKeyId/usage', auth: 'Bearer session only', summary: 'List API key usage',
+        description: 'Returns request activity using cursor pagination. Filter by method, statusCode, from, and to. Limit can be 1 to 100.',
+        request: 'Query: ?limit=25&method=GET&statusCode=200&cursor=...',
+        response: json({ success: true, usage: [{ id: 'usage-id', method: 'GET', endpoint: '/api/v1/files', statusCode: 200, durationMs: 12, ipAddress: '203.0.113.10', timestamp: '2026-08-30T10:00:00.000Z' }], pagination: { limit: 25, hasMore: false, nextCursor: null } }),
+      },
+      {
         method: 'DELETE', path: '/api/v1/api-keys/:apiKeyId', auth: 'Bearer session only', summary: 'Revoke an API key',
         description: 'Marks the key revoked and invalidates its Redis authentication cache.',
         response: json({ success: true, message: 'API key revoked', apiKeyId: '66c4...b12' }),

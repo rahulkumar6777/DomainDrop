@@ -977,6 +977,11 @@
   align-items: flex-start;
 }
 
+.api-key-list article > .row-actions {
+  align-self: center;
+  flex-wrap: wrap;
+}
+
 .key-main code {
   display: inline-block;
   margin-top: 7px;
@@ -1719,6 +1724,7 @@
   }
 
   .space-list article > .row-actions,
+  .api-key-list article > .row-actions,
   .api-key-list article > .button {
     width: 100%;
     justify-content: flex-end;

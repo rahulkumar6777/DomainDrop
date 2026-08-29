@@ -1,0 +1,252 @@
+.usage-key-summary {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.usage-key-summary > div {
+  min-width: 0;
+  display: grid;
+  flex: 1;
+  gap: 5px;
+}
+
+.usage-key-summary code {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usage-key-summary small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.usage-filters {
+  display: grid;
+  grid-template-columns: 130px 130px minmax(180px, 1fr) minmax(180px, 1fr) 86px auto;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+}
+
+.usage-filters label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.usage-filters label > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.usage-filters input,
+.usage-filters select {
+  width: 100%;
+  height: 38px;
+  min-width: 0;
+  padding: 0 10px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.usage-filters input:focus,
+.usage-filters select:focus {
+  border-color: var(--cyan);
+  outline: 0;
+}
+
+.usage-filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.usage-filter-actions .icon-button {
+  width: 40px;
+  height: 40px;
+}
+
+.usage-table {
+  min-width: 0;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid var(--line);
+}
+
+.usage-table-head,
+.usage-row {
+  min-width: 860px;
+  display: grid;
+  grid-template-columns: 180px minmax(300px, 1.8fr) 80px 90px 150px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.usage-table-head {
+  min-height: 42px;
+  color: var(--muted);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.usage-row {
+  min-height: 64px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+}
+
+.usage-row:last-child {
+  border-bottom: 0;
+}
+
+.usage-row:hover {
+  background: #fbfcfb;
+}
+
+.usage-request {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usage-request code {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usage-method,
+.usage-status {
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.usage-method {
+  min-width: 46px;
+  color: #176879;
+  background: var(--cyan-soft);
+}
+
+.method-post,
+.method-put,
+.method-patch {
+  color: #785c14;
+  background: var(--yellow-soft);
+}
+
+.method-delete {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.usage-status {
+  color: var(--muted);
+  background: var(--surface);
+}
+
+.status-2xx,
+.status-3xx {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.status-4xx {
+  color: #785c14;
+  background: var(--yellow-soft);
+}
+
+.status-5xx {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.usage-ip {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.usage-pagination {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.usage-pagination > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.usage-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .usage-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .usage-filter-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 620px) {
+  .usage-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .usage-filters label:nth-child(3),
+  .usage-filters label:nth-child(4),
+  .usage-filter-actions {
+    grid-column: 1 / -1;
+  }
+
+  .usage-filter-actions .button {
+    flex: 1;
+  }
+
+  .usage-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .usage-pagination > div,
+  .usage-pagination .button {
+    flex: 1;
+  }
+}

@@ -26,6 +26,7 @@ import {
   SignupPage,
 } from './pages/AuthPages.jsx'
 import ApiKeysPage from './features/api-keys/ApiKeysPage.jsx'
+import ApiKeyUsagePage from './features/api-keys/ApiKeyUsagePage.jsx'
 import FilesPage from './features/files/FilesPage.jsx'
 import OverviewPage from './features/overview/OverviewPage.jsx'
 import SpacesPage from './features/spaces/SpacesPage.jsx'
@@ -114,6 +115,7 @@ function App() {
               <Route path="storage/files" element={<FilesPage />} />
               <Route path="storage/spaces" element={<SpacesPage />} />
               <Route path="developer/api-keys" element={<ApiKeysPage />} />
+              <Route path="developer/api-keys/:apiKeyId/usage" element={<ApiKeyUsagePage />} />
               <Route path="settings/sessions" element={<SessionsPage />} />
               <Route path="settings/bucket" element={<SettingsPage />} />
               <Route path="files" element={<Navigate to="/app/storage/files" replace />} />
