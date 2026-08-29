@@ -21,13 +21,8 @@ export const changePasswordService = async (req) => {
         throw new AppError('Invalid Old password', 401);
     }
 
-    await User.findByIdAndUpdate(
-        {
-            _id: user._id
-        },
-        {
-            $set: { password: newPassword }
-        })
+    user.password = newPassword;
+    await user.save();
 
-        
+
 }
